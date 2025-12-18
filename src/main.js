@@ -52,10 +52,44 @@ async function loadData(){
     return null;
   }
 
-  const cards = await fetchAny(['/data/cards.json','/public/data/cards.json','/Cards.clean.json','./Cards.clean.json','/Cards.json']);
-  const summons = await fetchAny(['/data/summons.json','/public/data/summons.json','/Summons.clean.json','./Summons.clean.json','/Summons.json']);
-  const enemies = await fetchAny(['/data/enemies.json','/public/data/enemies.json','/Enemies.clean.json','./Enemies.clean.json','/Enemies.json']);
-  const upgrades = await fetchAny(['/data/upgrades.json','/public/data/upgrades.json','/Upgrades.clean.json','./Upgrades.clean.json','/Upgrades.json']);
+  // Try relative and repo-scoped paths first (works for project pages),
+  // then fall back to absolute root paths and legacy filenames.
+  const cards = await fetchAny([
+    'data/cards.json',
+    './data/cards.json',
+    'public/data/cards.json',
+    './public/data/cards.json',
+    '/data/cards.json',
+    '/public/data/cards.json',
+    '/Cards.clean.json','./Cards.clean.json','/Cards.json'
+  ]);
+  const summons = await fetchAny([
+    'data/summons.json',
+    './data/summons.json',
+    'public/data/summons.json',
+    './public/data/summons.json',
+    '/data/summons.json',
+    '/public/data/summons.json',
+    '/Summons.clean.json','./Summons.clean.json','/Summons.json'
+  ]);
+  const enemies = await fetchAny([
+    'data/enemies.json',
+    './data/enemies.json',
+    'public/data/enemies.json',
+    './public/data/enemies.json',
+    '/data/enemies.json',
+    '/public/data/enemies.json',
+    '/Enemies.clean.json','./Enemies.clean.json','/Enemies.json'
+  ]);
+  const upgrades = await fetchAny([
+    'data/upgrades.json',
+    './data/upgrades.json',
+    'public/data/upgrades.json',
+    './public/data/upgrades.json',
+    '/data/upgrades.json',
+    '/public/data/upgrades.json',
+    '/Upgrades.clean.json','./Upgrades.clean.json','/Upgrades.json'
+  ]);
   data.cards = cards; data.summons = summons; data.enemies = enemies; data.upgrades = upgrades;
 }
 
