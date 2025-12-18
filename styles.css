@@ -17,12 +17,12 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
 .stats-btn{
   background: linear-gradient(180deg,#00ff40,#0c491e);
   color: #062;
-  padding:12px 20px;
-  font-size:16px;
+  padding:18px 28px;
+  font-size:18px;
   font-weight:900;
-  border-radius:14px;
+  border-radius:16px;
   border:2px solid rgba(0,0,0,0.25);
-  box-shadow: 0 10px 26px rgba(0,0,0,0.45), inset 0 -2px 0 rgba(255,255,255,0.12);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5), inset 0 -3px 0 rgba(255,255,255,0.12);
   cursor:pointer;
   transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
@@ -30,13 +30,18 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
 .stats-btn:focus{ outline:3px solid rgba(255,215,102,0.18); }
 /* Floating stats button container override (ensures consistent placement) */
 .stats-btn.floating{
-  border-radius:12px;
-  padding:5px 7px;
+  border-radius:14px;
+  padding:8px 10px;
 }
 
 
-.stats-btn.icon:hover{ transform:translateY(-3px); box-shadow: 0 16px 36px rgba(0,0,0,0.5); filter:brightness(1.02); }
+.stats-btn.icon{padding:12px 14px;font-size:24px;border-radius:12px}
+.stats-btn.icon:hover{ transform:translateY(-3px); box-shadow: 0 18px 40px rgba(0,0,0,0.54); filter:brightness(1.02); }
 .stats-btn.icon:active{ transform:translateY(-1px); }
+
+/* When the stats button is both floating and an icon, keep the icon size
+  but reduce the visible green box by using a more specific selector */
+.stats-btn.floating.icon{ padding:6px 8px; }
 
 /* Visit Town (Upgrades) button with left icon */
 .upgrades-btn{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;background:linear-gradient(180deg,#fbcf79,#f59e0b);color:#062;font-weight:900;border:2px solid rgba(0,0,0,0.12);box-shadow:0 10px 26px rgba(0,0,0,0.3);}

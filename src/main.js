@@ -52,10 +52,10 @@ async function loadData(){
     return null;
   }
 
-  const cards = await fetchAny(['/public/data/cards.json','/Cards.clean.json','./Cards.clean.json','/Cards.json']);
-  const summons = await fetchAny(['/public/data/summons.json','/Summons.clean.json','./Summons.clean.json','/Summons.json']);
-  const enemies = await fetchAny(['/public/data/enemies.json','/Enemies.clean.json','./Enemies.clean.json','/Enemies.json']);
-  const upgrades = await fetchAny(['/public/data/upgrades.json','/Upgrades.clean.json','./Upgrades.clean.json','/Upgrades.json']);
+  const cards = await fetchAny(['/data/cards.json','/public/data/cards.json','/Cards.clean.json','./Cards.clean.json','/Cards.json']);
+  const summons = await fetchAny(['/data/summons.json','/public/data/summons.json','/Summons.clean.json','./Summons.clean.json','/Summons.json']);
+  const enemies = await fetchAny(['/data/enemies.json','/public/data/enemies.json','/Enemies.clean.json','./Enemies.clean.json','/Enemies.json']);
+  const upgrades = await fetchAny(['/data/upgrades.json','/public/data/upgrades.json','/Upgrades.clean.json','./Upgrades.clean.json','/Upgrades.json']);
   data.cards = cards; data.summons = summons; data.enemies = enemies; data.upgrades = upgrades;
 }
 
