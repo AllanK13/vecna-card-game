@@ -13,8 +13,8 @@ export function startEncounter(enemyDef, deck, rng, opts={}){
     summonUsed: {},
     summonCooldowns: {}
   };
-  // draw 5 at start
-  deck.drawN(5);
+  // All character cards should already be provided in `deck.hand` by the deck builder.
+  // Drawing has been removed — no action needed here.
   return state;
 }
 
@@ -42,6 +42,14 @@ export function placeHero(state, card){
   const hero = { cardId: card.id, hp: card.hp, base: card, tempHp: 0 };
   state.playfield[idx] = hero;
   return { success:true, slot: idx };
+}
+
+export function placeHeroAt(state, slotIndex, card){
+  if(typeof slotIndex !== 'number' || slotIndex < 0 || slotIndex >= state.playfield.length) return { success:false, reason: 'invalid slot' };
+  if(state.playfield[slotIndex] !== null) return { success:false, reason: 'slot occupied' };
+  const hero = { cardId: card.id, hp: card.hp, base: card, tempHp: 0 };
+  state.playfield[slotIndex] = hero;
+  return { success:true, slot: slotIndex };
 }
 
 export function playHeroAttack(state, slotIndex){
@@ -119,8 +127,15 @@ export function replaceHero(state, slotIndex, newCard){
   if(state.ap <= 0) return { success:false, reason:'no AP' };
   const old = state.playfield[slotIndex];
   if(old){
-    // discarded (goes to discard pile)
-    state.deck.discardCard(old.base);
+    // Return the replaced character card back into the player's hand so it can be reused
+    // during the remainder of the encounter (killed heroes remain removed).
+    try{
+      if(state.deck && Array.isArray(state.deck.hand)){
+        // clone the base card but preserve current HP so returned card keeps damage taken
+        const returned = Object.assign({}, old.base, { hp: old.hp });
+        state.deck.hand.push(returned);
+      }
+    }catch(e){ /* ignore */ }
   }
   state.playfield[slotIndex] = { cardId: newCard.id, hp: newCard.hp, base: newCard };
   state.ap -= 1;
@@ -150,6 +165,35 @@ export function enemyAct(state){
   const isAOE = rng ? (rng.int(2)===0) : (Math.random() < 0.3);
   const dmg = state.enemy.attack || 1;
   const events = [];
+  // Special behavior for Snurre: three single-target attacks with fixed dmg
+  if(state.enemy && (state.enemy.id === 'snurre' || (state.enemy.name && state.enemy.name.toLowerCase().includes('snurre')))){
+    const atkIndex = rng ? rng.int(3) : Math.floor(Math.random()*3);
+    const atkDmg = (atkIndex === 0) ? 5 : (atkIndex === 1) ? 6 : 7;
+    const attackName = (atkIndex === 0) ? 'Rock Throw' : (atkIndex === 1) ? 'Greatsword' : 'Legendary Attack';
+    // prefer helped hero (support 'Help') if present
+    const idx = _selectSingleTargetIndex(state, rng);
+    if(idx !== -1){
+      let h = state.playfield[idx];
+      if(h){
+        let remaining = h.defending ? 0 : atkDmg;
+        let tempTaken = 0;
+        if(h.tempHp && h.tempHp>0){ const take = Math.min(h.tempHp, remaining); h.tempHp -= take; tempTaken = take; remaining -= take; }
+        let hpTaken = 0;
+        if(remaining>0) { h.hp -= remaining; hpTaken = remaining; }
+        const died = h.hp <= 0;
+        const heroName = h.base && h.base.name ? h.base.name : null;
+        if(died){ state.exhaustedThisEncounter.push(h.base); state.playfield[idx]=null }
+        events.push({ type:'hit', slot:idx, dmg:atkDmg, tempTaken, hpTaken, remainingHp: died?0:h.hp, died, heroName, attack: atkIndex+1, attackName });
+      }
+    }
+    // after performing Snurre attack(s), perform end-of-enemy-turn housekeeping
+    state.ap = state.apPerTurn;
+    Object.keys(state.summonCooldowns).forEach(k=>{ if(state.summonCooldowns[k] > 0) state.summonCooldowns[k]--; });
+    state.playfield.forEach(h=>{ if(h && h.defending) h.defending = false; });
+    state.playfield.forEach(h=>{ if(h && h.helped) h.helped = false; });
+    // drawing removed — cards remain static in `deck.hand` for duration of encounter
+    return {did:'enemyAct', events};
+  }
   // Special behavior for Twig Blight: choose one of three single-target attacks each turn
   if(state.enemy && (state.enemy.id === 'twig_blight' || (state.enemy.name && state.enemy.name.toLowerCase().includes('twig')))){
     const atkIndex = rng ? rng.int(3) : Math.floor(Math.random()*3);
@@ -182,8 +226,7 @@ export function enemyAct(state){
     state.playfield.forEach(h=>{ if(h && h.defending) h.defending = false; });
     // clear helped flags (support 'Help' applies to the next enemy single-target attack only)
     state.playfield.forEach(h=>{ if(h && h.helped) h.helped = false; });
-    // draw 1 card for player next turn
-    try{ state.deck.drawN(1); }catch(e){ console.warn('draw after enemy failed', e); }
+    // drawing removed — cards remain static in `deck.hand` for duration of encounter
     return {did:'enemyAct', events};
   }
   // If the enemy defines an `attacks` array, pick one at random and use its
@@ -244,7 +287,7 @@ export function enemyAct(state){
     Object.keys(state.summonCooldowns).forEach(k=>{ if(state.summonCooldowns[k] > 0) state.summonCooldowns[k]--; });
     state.playfield.forEach(h=>{ if(h && h.defending) h.defending = false; });
     state.playfield.forEach(h=>{ if(h && h.helped) h.helped = false; });
-    try{ state.deck.drawN(1); }catch(e){ console.warn('draw after enemy failed', e); }
+    // drawing removed — cards remain static in `deck.hand` for duration of encounter
     return {did:'enemyAct', events};
   }
   // Special behavior for Wiltherp: two single-target attacks (2 dmg) and one AOE (1 dmg)
@@ -297,7 +340,7 @@ export function enemyAct(state){
     Object.keys(state.summonCooldowns).forEach(k=>{ if(state.summonCooldowns[k] > 0) state.summonCooldowns[k]--; });
     state.playfield.forEach(h=>{ if(h && h.defending) h.defending = false; });
     state.playfield.forEach(h=>{ if(h && h.helped) h.helped = false; });
-    try{ state.deck.drawN(1); }catch(e){ console.warn('draw after enemy failed', e); }
+    // drawing removed — cards remain static in `deck.hand` for duration of encounter
     return {did:'enemyAct', events};
   }
   if(isAOE){
@@ -374,14 +417,7 @@ export function enemyAct(state){
   state.playfield.forEach(h=>{ if(h && h.defending) h.defending = false; });
   // clear helped flags (support 'Help' applies to the next enemy single-target attack only)
   state.playfield.forEach(h=>{ if(h && h.helped) h.helped = false; });
-  // At the start of the player's next turn (immediately after the enemy acted), draw 1 card.
-  // `drawN` will reshuffle discard into the draw pile if needed.
-  try{
-    state.deck.drawN(1);
-  }catch(e){
-    // defensive: if deck doesn't support drawN for some reason, ignore
-    console.warn('draw after enemy failed', e);
-  }
+  // drawing removed — cards remain static in `deck.hand` for duration of encounter
   return {did:'enemyAct', events};
 }
 }

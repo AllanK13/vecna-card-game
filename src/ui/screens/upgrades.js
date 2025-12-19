@@ -73,9 +73,17 @@ export function renderUpgrades(root, ctx){
   (ctx.data.upgrades||[]).forEach(u=>{
     const item = el('div',{class:'panel card'},[]);
     item.appendChild(el('div',{class:'card-name'},[u.upgrade||u.id]));
-    item.appendChild(el('div',{},['Cost: '+u.ip_cost]));
-    const b = el('button',{class:'btn'},['Buy']);
-    if(ctx.meta && ctx.meta.ip < (u.ip_cost||0)) b.setAttribute('disabled','');
+    item.appendChild(el('div',{class:'muted card-stat'},['Cost: '+u.ip_cost]));
+    const purchased = ctx.meta && Array.isArray(ctx.meta.purchasedUpgrades) && ctx.meta.purchasedUpgrades.includes(u.id);
+    const prereqLocked = (u.id === 'ap_5') && !(ctx.meta && Array.isArray(ctx.meta.purchasedUpgrades) && ctx.meta.purchasedUpgrades.includes('ap_4'));
+    const affordable = ctx.meta && (ctx.meta.ip >= (u.ip_cost||0));
+    let label = 'Buy';
+    if(purchased) label = 'Purchased';
+    else if(prereqLocked) label = 'Requires AP to 4';
+    else if(!affordable) label = 'Buy';
+    const b = el('button',{class:'btn'},[ label ]);
+    if(purchased || prereqLocked) b.setAttribute('disabled','');
+    else if(!affordable) b.setAttribute('disabled','');
     b.addEventListener('click',()=>{ if(ctx.buyUpgrade) ctx.buyUpgrade(u.id); else if(ctx.setMessage) ctx.setMessage('No buy handler'); });
     item.appendChild(b);
     upGrid.appendChild(item);

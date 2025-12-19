@@ -8,6 +8,10 @@ export function renderEnd(root, ctx){
 
   const summary = el('div',{class:'end-summary panel'},[]);
   summary.appendChild(el('div',{class:'end-stat'},['IP earned: '+(rs.ipEarned||0)]));
+  // V interest display (if applicable)
+  if(ctx.vInterest && Number(ctx.vInterest) > 0){
+    summary.appendChild(el('div',{class:'end-stat'},['V interest earned: '+Number(ctx.vInterest)]));
+  }
   summary.appendChild(el('div',{class:'end-stat'},['Bosses defeated:']));
   const ul = el('ul',{class:'end-list'},[]);
   (rs.defeated||[]).forEach(id=>{

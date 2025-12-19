@@ -1,6 +1,6 @@
 import { createRNG } from './engine/rng.js';
 import { buildDeck } from './engine/deck.js';
-import { startEncounter, playHeroAttack, playHeroAction, enemyAct, isFinished, placeHero, replaceHero, useSummon, defendHero } from './engine/encounter.js';
+import { startEncounter, playHeroAttack, playHeroAction, enemyAct, isFinished, placeHero, placeHeroAt, replaceHero, useSummon, defendHero } from './engine/encounter.js';
 import { createMeta, buyUpgrade, buyLegendaryItem, loadMeta, saveMeta } from './engine/meta.js';
 import { AudioManager } from './engine/audio.js';
 import { register, navigate } from './ui/router.js';
@@ -133,7 +133,7 @@ function appStart(){
           // build deck and start a single-encounter state
           const deck = buildDeck(data.cards, chosen, RNG);
           const enemy = data.enemies[idx];
-          const encounter = startEncounter({...enemy}, deck, RNG, { apPerTurn: 3 });
+          const encounter = startEncounter({...enemy}, deck, RNG, { apPerTurn: meta.apPerTurn || 3 });
           const runSummary = { defeated: [], diedTo: null, ipEarned: 0 };
           const ctx = {
             data, meta,
@@ -155,8 +155,69 @@ function appStart(){
               if(!messages.length){ if(res && res.did === 'enemyStunned'){ messages = ['Enemy stunned and skipped its turn']; } else if(res && res.did === 'enemyAct'){ messages = ['Enemy could not attack (no targets)']; } else { messages = ['Enemy turn passed']; } }
               if(messages.length) ctx.setMessage(messages.join('\n'),1000);
               const finished = isFinished(encounter).winner;
-              if(finished === 'player'){ const reward = encounter.enemy.ip_reward || 1; const prevOnState = ctx.onStateChange; const prevSetMessage = ctx.setMessage; ctx.onStateChange = ()=>{}; ctx.setMessage = ()=>{}; const encounterEndCtx = { data, enemy: encounter.enemy, reward, runSummary, onContinue: ()=>{ ctx.onStateChange = prevOnState; ctx.setMessage = prevSetMessage; const enemyKey = encounter.enemy.id || encounter.enemy.name || 'unknown'; runSummary.defeated.push(enemyKey); runSummary.ipEarned = (runSummary.ipEarned||0) + reward; meta.ip += reward; meta.totalIpEarned = (meta.totalIpEarned||0) + reward; try{ meta.encountersBeaten = (meta.encountersBeaten || 0) + 1; meta.furthestReachedEnemy = Math.max((meta.furthestReachedEnemy||0), idx); meta.enemyDefeatCounts = meta.enemyDefeatCounts || {}; meta.enemyDefeatCounts[enemyKey] = (meta.enemyDefeatCounts[enemyKey] || 0) + 1; saveMeta(meta); }catch(e){} navigate('start'); } }; navigate('encounter_end', encounterEndCtx); return; }
-              else if(finished === 'enemy'){ const enemyKey = encounter.enemy.id || encounter.enemy.name || 'unknown'; runSummary.diedTo = enemyKey; try{ meta.runs = (meta.runs||0) + 1; meta.furthestReachedEnemy = Math.max((meta.furthestReachedEnemy||0), idx); meta.enemyVictoryCounts = meta.enemyVictoryCounts || {}; meta.enemyVictoryCounts[enemyKey] = (meta.enemyVictoryCounts[enemyKey] || 0) + 1; saveMeta(meta); }catch(e){} const endCtx = { data, runSummary, onRestart: ()=> navigate('start') }; ctx.onStateChange = ()=>{}; ctx.setMessage = ()=>{}; navigate('end', endCtx); return; }
+              if(finished === 'player'){
+                const reward = encounter.enemy.ip_reward || 1;
+                const prevOnState = ctx.onStateChange;
+                const prevSetMessage = ctx.setMessage;
+                ctx.onStateChange = ()=>{};
+                ctx.setMessage = ()=>{};
+                  const encounterEndCtx = {
+                    data,
+                    enemy: encounter.enemy,
+                    reward,
+                    runSummary,
+                    onContinue: ()=>{
+                      // restore handlers
+                      ctx.onStateChange = prevOnState;
+                      ctx.setMessage = prevSetMessage;
+                      // record defeated enemy and award IP
+                      const enemyKey = encounter.enemy.id || encounter.enemy.name || 'unknown';
+                      runSummary.defeated.push(enemyKey);
+                      runSummary.ipEarned = (runSummary.ipEarned||0) + reward;
+                      meta.ip += reward;
+                      meta.totalIpEarned = (meta.totalIpEarned||0) + reward;
+                      // update persistent stats
+                      try{
+                        meta.encountersBeaten = (meta.encountersBeaten || 0) + 1;
+                        meta.furthestReachedEnemy = Math.max((meta.furthestReachedEnemy||0), idx);
+                        meta.enemyDefeatCounts = meta.enemyDefeatCounts || {};
+                        meta.enemyDefeatCounts[enemyKey] = (meta.enemyDefeatCounts[enemyKey] || 0) + 1;
+                        saveMeta(meta);
+                      }catch(e){ /* ignore */ }
+                      // advance to next enemy if available
+                      const nextIndex = idx + 1;
+                      if(nextIndex < (data.enemies||[]).length){
+                        // continue to next enemy (simulate progression)
+                      }
+                      navigate('start');
+                    }
+                  };
+                  navigate('encounter_end', encounterEndCtx);
+                  return;
+              }
+              else if(finished === 'enemy'){
+                const enemyKey = encounter.enemy.id || encounter.enemy.name || 'unknown';
+                runSummary.diedTo = enemyKey;
+                let vInterest = 0;
+                try{
+                  meta.runs = (meta.runs||0) + 1;
+                  meta.furthestReachedEnemy = Math.max((meta.furthestReachedEnemy||0), idx);
+                  meta.enemyVictoryCounts = meta.enemyVictoryCounts || {};
+                  meta.enemyVictoryCounts[enemyKey] = (meta.enemyVictoryCounts[enemyKey] || 0) + 1;
+                  // If player purchased invest_v, award 25% of run IP (rounded down)
+                  if(meta && Array.isArray(meta.purchasedUpgrades) && meta.purchasedUpgrades.includes('invest_v')){
+                    vInterest = Math.floor((runSummary.ipEarned||0) * 0.25);
+                    meta.ip += vInterest;
+                    meta.totalIpEarned = (meta.totalIpEarned||0) + vInterest;
+                  }
+                  saveMeta(meta);
+                }catch(e){}
+                const endCtx = { data, runSummary, vInterest, onRestart: ()=> navigate('start') };
+                ctx.onStateChange = ()=>{};
+                ctx.setMessage = ()=>{};
+                navigate('end', endCtx);
+                return;
+              }
               navigate('battle', ctx);
             },
             onStateChange(){ navigate('battle', ctx); }
@@ -187,6 +248,7 @@ function appStart(){
         // simple feedback via alert if available
         if(typeof window !== 'undefined' && window.alert){
           if(res && res.success) window.alert('Purchased '+(u.upgrade||u.id));
+          else if(res && res.reason === 'prereq') window.alert('Cannot purchase: requires Increase AP to 4 first');
           else window.alert('Cannot purchase: insufficient IP');
         }
         // re-render the upgrades screen
@@ -264,7 +326,7 @@ async function startRun({seed, deckIds} = {}){
   let deck = buildDeck(data.cards, chosen, RNG);
   let currentEnemyIndex = 0;
   let enemy = data.enemies[currentEnemyIndex];
-  let encounter = startEncounter({...enemy}, deck, RNG, { apPerTurn: 3 });
+  let encounter = startEncounter({...enemy}, deck, RNG, { apPerTurn: meta.apPerTurn || 3 });
 
   const runSummary = { defeated: [], diedTo: null, ipEarned: 0 };
 
@@ -289,6 +351,12 @@ async function startRun({seed, deckIds} = {}){
       const res = placeHero(encounter, card);
       if(res.success){ if(ctx.setMessage) ctx.setMessage('Placed '+(card.name||card.id)+' in space '+(res.slot+1)); }
       else { if(ctx.setMessage) ctx.setMessage('No unoccupied space'); }
+      return res;
+    },
+    placeHeroAt(slot, card){
+      const res = placeHeroAt(encounter, slot, card);
+      if(res.success){ if(ctx.setMessage) ctx.setMessage('Placed '+(card.name||card.id)+' in space '+(res.slot+1)); }
+      else { if(ctx.setMessage) ctx.setMessage(res.reason||'Place failed'); }
       return res;
     },
     playHeroAttack(slot){
@@ -427,7 +495,7 @@ async function startRun({seed, deckIds} = {}){
                 chosen = rebuildIds.slice();
                 deck = buildDeck(data.cards, rebuildIds, RNG);
               }catch(e){ console.warn('Failed to rebuild deck for next encounter', e); }
-              encounter = startEncounter({...enemy}, deck, RNG, { apPerTurn: 3 });
+              encounter = startEncounter({...enemy}, deck, RNG, { apPerTurn: meta.apPerTurn || 3 });
               ctx.encounter = encounter;
               ctx.currentEnemyIndex = currentEnemyIndex;
               // persist updated IP immediately
@@ -453,16 +521,23 @@ async function startRun({seed, deckIds} = {}){
         // record death
         const enemyKey = encounter.enemy.id || encounter.enemy.name || 'unknown';
         runSummary.diedTo = enemyKey;
-        // update run stats (failed run)
-        try{ 
-          meta.runs = (meta.runs||0) + 1; 
+        // update run stats (failed run) and compute V interest if applicable
+        let vInterest = 0;
+        try{
+          meta.runs = (meta.runs||0) + 1;
           meta.furthestReachedEnemy = Math.max((meta.furthestReachedEnemy||0), currentEnemyIndex);
           // increment per-enemy victory count
           meta.enemyVictoryCounts = meta.enemyVictoryCounts || {};
           meta.enemyVictoryCounts[enemyKey] = (meta.enemyVictoryCounts[enemyKey] || 0) + 1;
-          saveMeta(meta); 
+          // If player purchased invest_v, award 25% of run IP (rounded down)
+          if(meta && Array.isArray(meta.purchasedUpgrades) && meta.purchasedUpgrades.includes('invest_v')){
+            vInterest = Math.floor((runSummary.ipEarned||0) * 0.25);
+            meta.ip += vInterest;
+            meta.totalIpEarned = (meta.totalIpEarned||0) + vInterest;
+          }
+          saveMeta(meta);
         }catch(e){}
-        const endCtx = { data, runSummary, onRestart: ()=> navigate('start') };
+        const endCtx = { data, runSummary, vInterest, onRestart: ()=> navigate('start') };
         // prevent any pending timeouts or future onStateChange calls from re-rendering the battle
         ctx.onStateChange = ()=>{};
         ctx.setMessage = ()=>{};

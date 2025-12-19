@@ -1,7 +1,13 @@
 [
-  {"upgrade":"Increase AP (to 4)","ip_cost":30,"id":"ap_4"},
-  {"upgrade":"Increase AP (to 5)","ip_cost":100,"id":"ap_5"},
+  {"upgrade":"Increase AP to 4","ip_cost":30,"id":"ap_4"},
+  {"upgrade":"Increase AP to 5","ip_cost":100,"id":"ap_5"},
+  {"upgrade":"Invest in V with Tootha; 25% more IP earned","ip_cost":30,"id":"invest_v"},
   {"upgrade":"Legendary Store Access","ip_cost":30,"id":"legendary_store"},
-  {"upgrade":"Invest in V with Tootha - 25% more IP earned","ip_cost":30,"id":"invest_v"},
-  {"upgrade":"Increase Party Slots 1","ip_cost":10,"id":"slot_1"}
+  {"upgrade":"Increase Party Slots 1","ip_cost":10,"id":"slot_1"},
+  {"upgrade":"Increase Party Slots 2","ip_cost":20,"id":"slot_2"},
+  {"upgrade":"Increase Party Slots 3","ip_cost":30,"id":"slot_3"},
+  {"upgrade":"Increase Party Slots 4","ip_cost":40,"id":"slot_4"},
+  {"upgrade":"Increase Party Slots 5","ip_cost":50,"id":"slot_5"},
+  {"upgrade":"Increase Party Slots 6","ip_cost":60,"id":"slot_6"},
+  {"upgrade":"Increase Party Slots 7","ip_cost":70,"id":"slot_7"}
 ]

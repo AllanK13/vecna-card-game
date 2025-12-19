@@ -336,10 +336,36 @@ export function renderBattle(root, ctx){
           return;
         }
         if(!pendingReplace) return;
+        const handIndex = pendingReplace.handIndex;
+        if(typeof handIndex !== 'number'){ ctx.pendingReplace = null; ctx.onStateChange(); return; }
+        // placing into a slot when in 'place' mode should target only empty slots
+        if(pendingReplace.mode === 'place'){
+          if(ctx.encounter.playfield[idx]){ if(ctx.setMessage) ctx.setMessage('Slot is occupied. Choose an empty slot or use Replace.'); return; }
+          // remove the card from hand now that the player confirmed the slot
+          const card = ctx.encounter.deck.playFromHand(handIndex);
+          if(!card){ if(ctx.setMessage) ctx.setMessage('Card not available'); ctx.pendingReplace = null; ctx.onStateChange(); return; }
+          const res = ctx.placeHeroAt(idx, card);
+          if(!res.success){
+            // on failure, return the card back to hand
+            try{ ctx.encounter.deck.hand.push(card); }catch(e){}
+            if(ctx.setMessage) ctx.setMessage(res.reason||'failed');
+          }
+          ctx.pendingReplace = null;
+          ctx.onStateChange();
+          return;
+        }
+        // replace mode (default behavior)
         if(ctx.encounter.ap < 1) { if(ctx.setMessage) ctx.setMessage('Not enough AP to replace'); ctx.pendingReplace = null; ctx.onStateChange(); return; }
-        const card = pendingReplace.card;
+        // remove the card from hand now that the player confirmed the slot
+        const card = ctx.encounter.deck.playFromHand(handIndex);
+        if(!card){ if(ctx.setMessage) ctx.setMessage('Card not available'); ctx.pendingReplace = null; ctx.onStateChange(); return; }
+        // perform replacement (this will return the previous occupant to hand inside replaceHero)
         const res = ctx.replaceHero(idx, card);
-        if(!res.success) { if(ctx.setMessage) ctx.setMessage(res.reason||'failed'); }
+        if(!res.success){
+          // on failure, return the card back to hand
+          try{ ctx.encounter.deck.hand.push(card); }catch(e){}
+          if(ctx.setMessage) ctx.setMessage(res.reason||'failed');
+        }
         ctx.pendingReplace = null;
         ctx.onStateChange();
       },
@@ -364,10 +390,19 @@ export function renderBattle(root, ctx){
           return;
         }
         if(!pendingReplace) return;
+        const handIndex = pendingReplace.handIndex;
+        if(typeof handIndex !== 'number'){ ctx.pendingReplace = null; ctx.onStateChange(); return; }
         if(ctx.encounter.ap < 1) { if(ctx.setMessage) ctx.setMessage('Not enough AP to replace'); ctx.pendingReplace = null; ctx.onStateChange(); return; }
-        const card = pendingReplace.card;
+        // remove the card from hand now that the player confirmed the slot
+        const card = ctx.encounter.deck.playFromHand(handIndex);
+        if(!card){ if(ctx.setMessage) ctx.setMessage('Card not available'); ctx.pendingReplace = null; ctx.onStateChange(); return; }
+        // perform replacement (this will return the previous occupant to hand inside replaceHero)
         const res = ctx.replaceHero(idx, card);
-        if(!res.success) { if(ctx.setMessage) ctx.setMessage(res.reason||'failed'); }
+        if(!res.success){
+          // on failure, return the card back to hand
+          try{ ctx.encounter.deck.hand.push(card); }catch(e){}
+          if(ctx.setMessage) ctx.setMessage(res.reason||'failed');
+        }
         ctx.pendingReplace = null;
         ctx.onStateChange();
       }
@@ -398,28 +433,33 @@ export function renderBattle(root, ctx){
 
   // Hand with inline action buttons (label added)
   const handWrap = el('div',{class:'panel hand-wrap'},[]);
-  handWrap.appendChild(el('h3',{class:'hand-title'},['Hand']));
+  handWrap.appendChild(el('h3',{class:'hand-title'},['Party']));
   const handGrid = el('div',{class:'card-grid'},[]);
     ctx.encounter.deck.hand.forEach((c,i)=>{
       const cardWrap = el('div',{class:'card-wrap panel'});
       cardWrap.appendChild(cardTile(c, { hideCost: true, hideSlot: true }));
 
       const actions = el('div',{class:'row'},[]);
-      const placeBtn = el('button',{class:'btn slot-action'},['Place (first unoccupied space)']);
-      placeBtn.addEventListener('click',()=>{
-        const card = ctx.encounter.deck.playFromHand(i);
-        const res = ctx.placeHero(card);
-        if(!res.success) { if(ctx.setMessage) ctx.setMessage('No unoccupied space'); }
-        ctx.onStateChange();
-      });
+          const placeBtn = el('button',{class:'btn slot-action'},['Place']);
+          placeBtn.addEventListener('click',()=>{
+            // enter pending place mode so the player can click the desired slot
+            // do not remove card from hand until placement is confirmed
+            const card = ctx.encounter.deck.hand[i];
+            if(!card) { if(ctx.setMessage) ctx.setMessage('Card not available'); return; }
+            ctx.pendingReplace = { handIndex: i, mode: 'place' };
+            if(ctx.setMessage) ctx.setMessage('Click an empty space to place '+(card.name||card.id));
+            ctx.onStateChange();
+          });
       actions.appendChild(placeBtn);
 
       const replaceBtn = el('button',{class:'btn slot-action'},['Replace']);
       if(ctx.encounter.ap < 1) replaceBtn.setAttribute('disabled','');
       replaceBtn.addEventListener('click',()=>{
-        const card = ctx.encounter.deck.playFromHand(i);
-        ctx.pendingReplace = { card, handIndex: i };
-        if(ctx.setMessage) ctx.setMessage('Click a space to replace it with '+card.name);
+        // do not remove card from hand until replacement confirmed
+        const card = ctx.encounter.deck.hand[i];
+        if(!card) { if(ctx.setMessage) ctx.setMessage('Card not available'); return; }
+        ctx.pendingReplace = { handIndex: i, mode: 'replace' };
+        if(ctx.setMessage) ctx.setMessage('Click a space to replace it with '+(card.name||card.id));
         ctx.onStateChange();
       });
       actions.appendChild(replaceBtn);

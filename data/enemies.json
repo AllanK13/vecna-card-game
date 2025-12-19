@@ -44,4 +44,16 @@
       { "name": "Disintegrate", "type": "single", "dmg": 5 }
     ]
   }
+,
+  {
+    "name": "King Snurre",
+    "ip_reward": 9,
+    "hp": 88,
+    "id": "snurre",
+    "attacks": [
+      { "name": "Rock Throw", "type": "single", "dmg": 5 },
+      { "name": "Greatsword", "type": "single", "dmg": 6 },
+      { "name": "Legendary Attack", "type": "single", "dmg": 7 }
+    ]
+  }
 ]

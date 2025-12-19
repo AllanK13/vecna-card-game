@@ -7,7 +7,7 @@ export function renderStore(root, ctx){
   ctx.data.upgrades.forEach(u=>{
     const item = el('div',{class:'panel card'});
     item.appendChild(el('div',{},[u.upgrade||u.id]));
-    item.appendChild(el('div',{},['Cost: '+u.ip_cost]));
+    item.appendChild(el('div',{class:'muted card-stat'},['Cost: '+u.ip_cost]));
     const b = el('button',{class:'btn'},['Buy']);
     b.addEventListener('click',()=>{ if(ctx.buyUpgrade) ctx.buyUpgrade(u.id); else { if(ctx.setMessage) ctx.setMessage('No buy handler'); } });
     item.appendChild(b);
@@ -22,7 +22,7 @@ export function renderStore(root, ctx){
     ctx.data.legendary.forEach(it=>{
       const elItem = el('div',{class:'panel card'});
       elItem.appendChild(el('div',{},[it.name||it.id]));
-      elItem.appendChild(el('div',{},['Cost: '+it.ip_cost]));
+      elItem.appendChild(el('div',{class:'muted card-stat'},['Cost: '+it.ip_cost]));
       const buy = el('button',{class:'btn'},['Buy Legendary']);
       buy.addEventListener('click',()=>{ if(ctx.buyLegendaryItem) ctx.buyLegendaryItem(it.id); else { if(ctx.setMessage) ctx.setMessage('No buy handler'); } });
       elItem.appendChild(buy);

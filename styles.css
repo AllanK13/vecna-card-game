@@ -97,7 +97,7 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
   justify-content:space-between;
   box-shadow:0 6px 18px rgba(0,0,0,0.25);
 }
-.upgrades-screen .meta-grid .card .card-name{font-size:14px;margin:0 0 6px 0}
+.upgrades-screen .meta-grid .card .card-name{font-size:24px;margin:8px 0}
 .upgrades-screen .meta-grid .card button{padding:6px 8px;font-size:13px}
 
 /* Stats screen styling */

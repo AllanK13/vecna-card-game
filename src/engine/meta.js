@@ -6,10 +6,15 @@ export function createMeta(){
     totalIpEarned: 0,
     legendaryUnlocked: false,
     // enable debug UI when true
-    debugEnabled: false,
+    debugEnabled: true,
     partySlots: 3,
-    ownedCards: [],
-    ownedSummons: [],
+    // default owned starters for a fresh save
+    ownedCards: ['meepo','cree_kid','erky_timbers'],
+    ownedSummons: ['garon'],
+    // AP per turn (can be increased via upgrades)
+    apPerTurn: 3,
+    // track purchased metagame upgrades by id
+    purchasedUpgrades: [],
     // Stats
     runs: 0,
     encountersBeaten: 0,
@@ -38,10 +43,21 @@ export function loadMeta(){
 
 export function buyUpgrade(meta, upgrade){
   if(!upgrade) return { success:false };
-  if(meta.ip < upgrade.ip_cost) return { success:false };
+  // prerequisite: AP5 requires AP4 first
+  if(upgrade.id === 'ap_5'){
+    if(!(meta.purchasedUpgrades && meta.purchasedUpgrades.includes('ap_4'))){
+      return { success:false, reason:'prereq' };
+    }
+  }
+  if(meta.ip < upgrade.ip_cost) return { success:false, reason:'insufficient_ip' };
   meta.ip -= upgrade.ip_cost;
   if(upgrade.id === 'legendary_store') meta.legendaryUnlocked = true;
   if(upgrade.id && upgrade.id.startsWith('slot_')) meta.partySlots += 1;
+  // Handle AP upgrades
+  if(upgrade.id === 'ap_4') meta.apPerTurn = 4;
+  if(upgrade.id === 'ap_5') meta.apPerTurn = 5;
+  // record purchased upgrade id for UI state
+  if(upgrade.id){ meta.purchasedUpgrades = meta.purchasedUpgrades || []; if(!meta.purchasedUpgrades.includes(upgrade.id)) meta.purchasedUpgrades.push(upgrade.id); }
   saveMeta(meta);
   return { success:true, meta };
 }
