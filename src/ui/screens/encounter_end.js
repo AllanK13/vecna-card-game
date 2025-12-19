@@ -15,7 +15,7 @@ export function renderEncounterEnd(root, ctx){
       const base = (AudioManager.getVolume ? AudioManager.getVolume() : (AudioManager.audio && typeof AudioManager.audio.volume === 'number' ? AudioManager.audio.volume : 1));
       ctx._victoryPrevVol = base;
       // Turn down victory track to 40% of base (quieter)
-      AudioManager.setVolume(Math.max(0, base * 0.25));
+      AudioManager.setVolume(Math.max(0, base * 0.10));
     }catch(e){/* ignore */}
   }catch(e){ /* ignore audio init failures */ }
 
