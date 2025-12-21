@@ -385,7 +385,44 @@ export function enemyAct(state){
     Object.keys(state.summonCooldowns).forEach(k=>{
       if(state.summonCooldowns[k] > 0) state.summonCooldowns[k]--;
     });
-    return { did:'enemyStunned', events:[{type:'stunned', msg:'Enemy stunned and skipped its turn'}] };
+    // clear defending/helped markers so heroes recover from defend/help states
+    state.playfield.forEach(h=>{ if(h && h.defending) h.defending = false; });
+    state.playfield.forEach(h=>{ if(h && h.helped) h.helped = false; });
+    // Process any pendingEffects that should trigger after the enemy acted
+    // and collect UI events so callers see the damage produced while stunned.
+    const stunnedEvents = [];
+    if(state.pendingEffects && Array.isArray(state.pendingEffects) && state.pendingEffects.length>0){
+      const remaining = [];
+      state.pendingEffects.forEach(eff=>{
+        if(eff && eff.trigger === 'afterEnemy'){
+          if(eff.type === 'delayedDamage'){
+            const dmg = Number(eff.dmg) || 0;
+            state.enemy.hp = Math.max(0, state.enemy.hp - dmg);
+            stunnedEvents.push({ type: 'enemyDamage', id: eff.id, slot: eff.slot, dmg: dmg, enemyHp: state.enemy.hp, sourceName: eff.sourceName });
+          }
+          if(typeof eff.times === 'number' && eff.times > 1){
+            const copy = Object.assign({}, eff, { times: eff.times - 1 });
+            remaining.push(copy);
+          }
+        } else {
+          remaining.push(eff);
+        }
+      });
+      state.pendingEffects = remaining;
+    }
+    // Decrement protection durations (e.g., Willis shield)
+    state.playfield.forEach(h=>{
+      if(h && h.protected){
+        try{ h.protected.turns = (Number(h.protected.turns) || 0) - 1; }catch(e){}
+        if(!h.protected || h.protected.turns <= 0){ try{ delete h.protected; }catch(e){} }
+      }
+    });
+    // Reset per-round support usage so supports are usable next round
+    try{ state.supportUsed = {}; }catch(e){}
+    // return the stunned event plus any damage events produced by pendingEffects
+    const baseEvent = {type:'stunned', msg:'Enemy stunned and skipped its turn'};
+    const allEvents = [baseEvent].concat(stunnedEvents);
+    return { did:'enemyStunned', events: allEvents };
   }
   // simple AI: choose single-target vs AOE randomly
   const rng = state.rng;
