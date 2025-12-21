@@ -174,11 +174,14 @@ function createEncounterSession(enemyIndex, chosenIds, rng){
       const r = useSummon(encounter,s,targetIndex);
       if(!r.success){ if(ctx.setMessage) ctx.setMessage(r.reason||'Summon failed'); }
       else { if(ctx.setMessage) ctx.setMessage('Summon: '+(s.name||s.id)+' used'); }
-      // track summon usage
+      // track summon usage (use the passed `id` as a reliable key)
       try{
-        if(r.success && s && s.id){
+        if(r && r.success && id){
           meta.summonUsage = meta.summonUsage || {};
-          meta.summonUsage[s.id] = (meta.summonUsage[s.id] || 0) + 1;
+          meta.summonUsage[id] = (meta.summonUsage[id] || 0) + 1;
+          // also record cumulative usage separately for Stats
+          meta.totalSummonUsage = meta.totalSummonUsage || {};
+          meta.totalSummonUsage[id] = (meta.totalSummonUsage[id] || 0) + 1;
           saveMeta(meta);
         }
       }catch(e){ /* ignore */ }
@@ -332,7 +335,7 @@ function createEncounterSession(enemyIndex, chosenIds, rng){
           meta.enemyVictoryCounts[enemyKey] = (meta.enemyVictoryCounts[enemyKey] || 0) + 1;
           // If player purchased invest_v, award 25% of run IP (rounded down)
           if(meta && Array.isArray(meta.purchasedUpgrades) && meta.purchasedUpgrades.includes('invest_v')){
-            vInterest = Math.floor((runSummary.ipEarned||0) * 0.25);
+            vInterest = Math.floor((runSummary.ipEarned||0) * 0.15);
             meta.ip += vInterest;
             meta.totalIpEarned = (meta.totalIpEarned||0) + vInterest;
           }

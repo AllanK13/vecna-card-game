@@ -60,10 +60,17 @@ export function renderStats(root, ctx){
   const baseSummons = (ctx && ctx.data && ctx.data.summons) ? ctx.data.summons : [];
   const legendarySummons = (ctx && ctx.data && ctx.data.legendary) ? ctx.data.legendary.filter(l => l && typeof l.hp !== 'number') : [];
   const summonsData = baseSummons.concat(legendarySummons);
-  const summonUsage = meta.summonUsage || {};
+  const summonUsage = (meta.totalSummonUsage && Object.keys(meta.totalSummonUsage).length>0) ? meta.totalSummonUsage : (meta.summonUsage || {});
   const summonNameCounts = {};
+  // Initialize counts for all known summons (so the section shows even when zero)
+  summonsData.forEach(s=>{
+    if(!s) return;
+    const display = s.name || s.id || String(s);
+    summonNameCounts[display] = 0;
+  });
+  // Add persisted usage counts from meta (aggregating by id or name)
   Object.entries(summonUsage).forEach(([id, cnt])=>{
-    const s = summonsData.find(x=> x.id===id) || summonsData.find(x=> x.name===id);
+    const s = summonsData.find(x=> x && x.id===id) || summonsData.find(x=> x && x.name===id);
     const display = (s && s.name) ? s.name : id;
     summonNameCounts[display] = (summonNameCounts[display] || 0) + (cnt||0);
   });

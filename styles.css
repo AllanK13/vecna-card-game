@@ -794,6 +794,7 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
   margin:0 0 12px 0;
   background: linear-gradient(90deg,#ffd86b,#ffb84d,#f59e0b);
   -webkit-background-clip: text;
+  background-clip:text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 3px 12px rgba(0,0,0,0.6);
 }
@@ -1199,6 +1200,30 @@ body{
   transform:translateZ(0);
   box-shadow:0 18px 40px rgba(0,0,0,0.6);
   border-radius:12px;
+}
+/* Ensure dragged clone never shows selection/focus outlines */
+.dragging-card, .dragging-card * , .dragging-card.selected {
+  outline: none !important;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.6) !important;
+}
+/* Further override: remove any .selected styling inside the clone (outline/transform/shadow)
+   and suppress focus outlines on nested elements while dragging. */
+.dragging-card .selected, .dragging-card.selected .selected {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  transform: none !important;
+}
+.dragging-card:focus, .dragging-card *:focus { outline: none !important; }
+
+/* When a drag from hand is active, hide visual outlines/shadows on the original card and wrapper
+   so only the dragged clone is visible. Keep slot hover outlines intact. */
+body.dragging-active .card,
+body.dragging-active .card.selected,
+body.dragging-active .card-wrap.panel{
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 .card-wrap.panel.pending-slot-hover{
   outline:4px dashed rgba(134,239,172,0.95);

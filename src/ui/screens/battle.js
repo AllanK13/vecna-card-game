@@ -70,14 +70,15 @@ export function renderBattle(root, ctx){
       // so each enemy/encounter can have its own track instead of reusing the
       // first-chosen value for the entire run.
       if(!ctx.encounter._battleMusicSrc){
-        if(enemy.id === 'twig_blight' || (enemy.name && /twig/i.test(enemy.name))){
+        if(enemy.id === 'vecna' || (enemy.name && /vecna/i.test(enemy.name))){
+          ctx.encounter._battleMusicSrc = './assets/music/secret.mp3';
+        } else if(enemy.id === 'twig_blight' || (enemy.name && /twig/i.test(enemy.name))){
           ctx.encounter._battleMusicSrc = './assets/music/battle_1.mp3';
         } else {
           const picks = ['battle_1.mp3','battle_2.mp3','battle_3.mp3'];
           const sel = picks[Math.floor(Math.random() * picks.length)];
           ctx.encounter._battleMusicSrc = `./assets/music/${sel}`;
         }
-        
       }
       AudioManager.init(ctx.encounter._battleMusicSrc, { autoplay:true, loop:true });
     }
@@ -266,8 +267,17 @@ export function renderBattle(root, ctx){
       if(s && s.id === 'blackrazor'){ try{ sCard.classList.add('blackrazor'); }catch(e){} }
       const used = ctx.encounter.summonUsed && ctx.encounter.summonUsed[s.id];
       const cd = ctx.encounter.summonCooldowns && (ctx.encounter.summonCooldowns[s.id]||0);
-      const btn = el('button',{class:'btn'},[ used ? 'Used' : (cd>0 ? 'Cooldown: '+cd : 'Cast')]);
-      if(used || cd>0) btn.setAttribute('disabled','');
+      // also consider once-per-run usage persisted in meta so legendary summons remain disabled across fights
+      let usedForRun = false;
+      try{
+        if(s && s.restriction && typeof s.restriction === 'string' && s.restriction.toLowerCase().includes('once per run')){
+          const mu = (ctx.meta && ctx.meta.summonUsage) ? ctx.meta.summonUsage[s.id] : 0;
+          if(mu && mu > 0) usedForRun = true;
+        }
+      }catch(e){}
+      const btnLabel = used ? 'Used' : (usedForRun ? 'Used (run)' : (cd>0 ? 'Cooldown: '+cd : 'Cast'));
+      const btn = el('button',{class:'btn'},[ btnLabel ]);
+      if(used || usedForRun || cd>0) btn.setAttribute('disabled','');
       btn.addEventListener('click',()=>{
         const needsTarget = /one target|target/i.test(s.ability||'') || s.id === 'blackrazor';
         if(needsTarget){
@@ -569,6 +579,7 @@ export function renderBattle(root, ctx){
       try{ clone.style.width = (origCardEl ? origCardEl.getBoundingClientRect().width : 120) + 'px'; }catch(e){}
       clone.classList.add('dragging-card');
       document.body.appendChild(clone);
+      try{ document.body.classList.add('dragging-active'); }catch(e){}
 
       let lastX = 0, lastY = 0;
       function move(ev){
@@ -613,6 +624,7 @@ export function renderBattle(root, ctx){
           }
         }
         try{ document.body.removeChild(clone); }catch(e){}
+        try{ document.body.classList.remove('dragging-active'); }catch(e){}
         window.removeEventListener('pointermove', move);
         window.removeEventListener('pointerup', up);
         ctx.pendingReplace = null;

@@ -533,7 +533,7 @@ export function useSummon(state, summonDef, targetIndex=null){
     const max = state.enemy.maxHp || state.enemy.hp;
     const reduce = Math.floor((max * 0.5));
     state.enemy.hp = Math.max(0, state.enemy.hp - reduce);
-    try{ AudioManager.playSfx(['./assets/sfx/wave.mp3'], { volume: 2.0 }); }catch(e){}
+    try{ AudioManager.playSfx(['./assets/sfx/wave.mp3'], { volume: 3.0 }); }catch(e){}
   } 
   else {
     // fallback: try to parse numeric heal

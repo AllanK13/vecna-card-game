@@ -93,7 +93,7 @@
     "hp": 99999,
     "id": "vecna",
     "attacks": [
-      { "name": "Rewrite History", "type": "aoe", "dmg": 10 },
+      { "name": "Toying with you", "type": "aoe", "dmg": 1 },
       { "name": "Rewrite History", "type": "aoe", "dmg": 10 },
       { "name": "Metagame", "type": "single", "dmg": 200 }
     ]

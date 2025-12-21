@@ -22,6 +22,7 @@ export function createMeta(){
     furthestReachedEnemy: null, // store enemy index or id
     characterUsage: {}, // map cardId -> times used
     summonUsage: {}, // map summonId -> times used
+    totalSummonUsage: {}, // cumulative across runs
     // enemy stats
     enemyDefeatCounts: {}, // map enemyId -> times defeated by player
     enemyVictoryCounts: {} // map enemyId -> times that enemy defeated the party
