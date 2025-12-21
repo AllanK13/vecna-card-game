@@ -24,7 +24,7 @@
   {
     "name": "Red Wizard",
     "ip_reward": 5,
-    "hp": 54,
+    "hp": 58,
     "id": "red_wizard",
     "attacks": [
       { "name": "Firebolt", "type": "single", "dmg": 3 },
@@ -35,23 +35,23 @@
   {
     "name": "Szass Tam",
     "ip_reward": 7,
-    "hp": 73,
+    "hp": 86,
     "id": "szass_tam",
     "attacks": [
-      { "name": "Paralyzing Touch", "type": "single", "dmg": 4 },
-      { "name": "Cone of Cold", "type": "aoe", "dmg": 3 },
-      { "name": "Disintegrate", "type": "single", "dmg": 6 }
+      { "name": "Paralyzing Touch", "type": "single", "dmg": 5 },
+      { "name": "Lightning Bolt", "type": "aoe", "dmg": 3 },
+      { "name": "Cone of Cold", "type": "aoe", "dmg": 4 }
     ]
   },
   {
     "name": "King Snurre",
     "ip_reward": 9,
-    "hp": 106,
+    "hp": 122,
     "id": "snurre",
     "attacks": [
-      { "name": "Rock Throw", "type": "single", "dmg": 5 },
-      { "name": "Greatsword", "type": "single", "dmg": 6 },
-      { "name": "Legendary Attack", "type": "single", "dmg": 8 }
+      { "name": "Rock Throw", "type": "aoe", "dmg": 5 },
+      { "name": "Greatsword", "type": "single", "dmg": 8 },
+      { "name": "Greatsword", "type": "multi", "dmg": 6 }
     ]
   },
   {

@@ -228,10 +228,16 @@ function createEncounterSession(enemyIndex, chosenIds, rng){
       if(finished !== 'player'){
         try{
           const hasAoE = res && Array.isArray(res.events) && res.events.some(ev => ev.attackType === 'aoe');
+          const hasMulti = res && Array.isArray(res.events) && res.events.some(ev => ev.attackType === 'multi');
           const hasSingle = res && Array.isArray(res.events) && res.events.some(ev => ev.attackType === 'single');
           if(hasAoE){
             const sfxCandidates = ['./assets/sfx/enemy_aoe.mp3'];
             AudioManager.playSfx(sfxCandidates, { volume: 0.3 });
+          } else if(hasMulti){
+            const sfxCandidates = ['./assets/sfx/enemy_attack.mp3'];
+            // play twice for multi attacks (slight stagger so they are audible separately)
+            try{ AudioManager.playSfx(sfxCandidates, { volume: 0.2 }); }catch(e){}
+            setTimeout(()=>{ try{ AudioManager.playSfx(sfxCandidates, { volume: 0.2 }); }catch(e){} }, 200);
           } else if(hasSingle){
             const sfxCandidates = ['./assets/sfx/enemy_attack.mp3'];
             AudioManager.playSfx(sfxCandidates, { volume: 0.2 });

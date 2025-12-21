@@ -113,6 +113,19 @@ function resolveSingleTargetAttack(state, dmg, attackIndex, attackName){
   return events;
 }
 
+// Multi attack: perform two single-target attacks using the provided damage value.
+// Each resulting event is marked with attackType='multi' so UI/audio can handle it.
+function resolveMultiAttack(state, dmg, attackIndex, attackName){
+  const events = [];
+  try{
+    const first = resolveSingleTargetAttack(state, dmg, attackIndex, attackName);
+    first.forEach(ev=>{ ev.attackType = 'multi'; events.push(ev); });
+    const second = resolveSingleTargetAttack(state, dmg, attackIndex, attackName);
+    second.forEach(ev=>{ ev.attackType = 'multi'; events.push(ev); });
+  }catch(e){ /* defensive: ignore errors and return what we have */ }
+  return events;
+}
+
 // Centralized AOE attack resolution. Applies the AOE damage rules used
 // throughout the file (defending halves damage for defending heroes),
 // mutates state, and returns an array of events.
@@ -445,6 +458,8 @@ export function enemyAct(state){
     // Use centralized handlers for both AOE and single-target attacks
     if(type === 'aoe'){
       events.push(...resolveAoEAttack(state, baseDmg, atkIndex, attackName));
+    } else if(type === 'multi'){
+      events.push(...resolveMultiAttack(state, baseDmg, atkIndex, attackName));
     } else {
       events.push(...resolveSingleTargetAttack(state, baseDmg, atkIndex, attackName));
     }
