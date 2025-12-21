@@ -88,6 +88,8 @@ export function renderUpgrades(root, ctx){
       if(n > 1 && !purchasedList.includes('slot_'+(n-1))){ prereqLocked = true; prereqMessage = 'Requires previous slot'; }
     } else if(u.id === 'ap_5' && !purchasedList.includes('ap_4')){
       prereqLocked = true; prereqMessage = 'Requires AP to 4';
+    } else if(u.id === 'slot_plus3' && !purchasedList.includes('slot_9')){
+      prereqLocked = true; prereqMessage = 'Requires previous slot upgrades (Slot 9)';
     }
     const cost = Number(u.ip_cost||0);
     const affordable = ctx.meta && (ctx.meta.ip >= cost);

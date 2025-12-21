@@ -12,4 +12,5 @@
   {"upgrade":"Increase Party Slots 7","ip_cost":85,"id":"slot_7"},
   {"upgrade":"Increase Party Slots 8","ip_cost":115,"id":"slot_8"},
   {"upgrade":"Increase Party Slots 9","ip_cost":150,"id":"slot_9"}
+  ,{"upgrade":"Unlock +3 Party Slots","ip_cost":1000,"id":"slot_plus3"}
 ]

@@ -87,7 +87,7 @@
     "name": "Kiefer",
     "type": "Support",
     "hp": 30.0,
-    "ability": "Telekineses: 1 in 6 chance enemy is stunned for 3 turns",
+    "ability": "Telekineses: 1 in 4 chance enemy is stunned for 3 turns",
     "actionType": "attack",
     "tier": 5,
     "slot_cost": 5.0,

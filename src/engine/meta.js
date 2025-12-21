@@ -52,7 +52,11 @@ export function buyUpgrade(meta, upgrade){
   if(meta.ip < upgrade.ip_cost) return { success:false, reason:'insufficient_ip' };
   meta.ip -= upgrade.ip_cost;
   if(upgrade.id === 'legendary_store') meta.legendaryUnlocked = true;
-  if(upgrade.id && upgrade.id.startsWith('slot_')) meta.partySlots += 1;
+  if(upgrade.id && upgrade.id.startsWith('slot_')){
+    // special case: unlock that grants +3 slots
+    if(upgrade.id === 'slot_plus3') meta.partySlots += 3;
+    else meta.partySlots += 1;
+  }
   // Handle AP upgrades
   if(upgrade.id === 'ap_4') meta.apPerTurn = 4;
   if(upgrade.id === 'ap_5') meta.apPerTurn = 5;

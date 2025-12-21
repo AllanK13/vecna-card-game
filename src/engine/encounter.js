@@ -313,12 +313,12 @@ export function playHeroAction(state, slotIndex, targetIndex=null){
       return { success:true, type:'support', slot: slotIndex, id:'miley', dmg, enemyHp: state.enemy.hp, scheduled: true };
     }
 
-    // Kiefer: 1 in 6 chance to stun the enemy for the rest of the encounter
+    // Kiefer: 1 in 4 chance to stun the enemy for the rest of the encounter
     if (hid === 'kiefer'){
       state.ap -= 1;
       state.supportUsed['kiefer'] = true;
       // Use deterministic RNG if available on state, else fallback to Math.random
-      let roll = (state.rng && typeof state.rng.int === 'function') ? (state.rng.int(6) + 1) : (Math.floor(Math.random()*6) + 1);
+      let roll = (state.rng && typeof state.rng.int === 'function') ? (state.rng.int(4) + 1) : (Math.floor(Math.random()*4) + 1);
       if(roll === 1){
           state.enemy.stunnedTurns = 3;
           return { success:true, type:'support', slot: slotIndex, id:'kiefer', stunned: true, roll };
