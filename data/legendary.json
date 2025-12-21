@@ -22,5 +22,77 @@
     "restriction": "Once per run",
     "ip_cost": 50,
     "id": "wave"
+  },
+  {
+    "name": "Robohoam",
+    "type": "DPS",
+    "hp": 30.0,
+    "ability": "Divine Smite: 10 damage",
+    "actionType": "attack",
+    "tier": 5,
+    "slot_cost": 5.0,
+    "ip_cost": 100,
+    "id": "robohoam",
+    "starter": false
+  },
+  {
+    "name": "Bjurganmyr",
+    "type": "Support",
+    "hp": 30.0,
+    "ability": "Spike Growth: 8 damage per turn for 3 turns",
+    "actionType": "attack",
+    "tier": 5,
+    "slot_cost": 5.0,
+    "ip_cost": 100,
+    "id": "bjurganmyr",
+    "starter": false
+  },
+  {
+    "name": "Tor",
+    "type": "Healer",
+    "hp": 30.0,
+    "ability": "Mass Heal: heals entire party 10 HP",
+    "actionType": "heal",
+    "tier": 5,
+    "slot_cost": 5.0,
+    "ip_cost": 100,
+    "id": "tor",
+    "starter": false
+  },
+  {
+    "name": "Griff",
+    "type": "DPS",
+    "hp": 30.0,
+    "ability": "Fireball: 10 damage",
+    "actionType": "attack",
+    "tier": 5,
+    "slot_cost": 5.0,
+    "ip_cost": 100,
+    "id": "griff",
+    "starter": false
+  },
+  {
+    "name": "Miley",
+    "type": "Support",
+    "hp": 30.0,
+    "ability": "Dawn: 8 damage per turn for 3 turns",
+    "actionType": "attack",
+    "tier": 5,
+    "slot_cost": 5.0,
+    "ip_cost": 100,
+    "id": "miley",
+    "starter": false
+  },
+  {
+    "name": "Kiefer",
+    "type": "Support",
+    "hp": 30.0,
+    "ability": "Telekineses: 1 in 6 chance enemy is stunned for rest of battle",
+    "actionType": "attack",
+    "tier": 5,
+    "slot_cost": 5.0,
+    "ip_cost": 100,
+    "id": "kiefer",
+    "starter": false
   }
 ]

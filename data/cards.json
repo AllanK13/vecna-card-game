@@ -12,18 +12,6 @@
     "starter": true
   },
   {
-    "name": "Cree (child)",
-    "type": "DPS",
-    "hp": 2.0,
-    "ability": "Greatsword: 1 damage",
-    "actionType": "attack",
-    "tier": 1,
-    "slot_cost": 1.0,
-    "ip_cost": 0,
-    "id": "cree_kid",
-    "starter": true
-  },
-  {
     "name": "Erky Timbers",
     "type": "Healer",
     "hp": 3.0,
@@ -33,6 +21,18 @@
     "slot_cost": 1.0,
     "ip_cost": 0,
     "id": "erky_timbers",
+    "starter": true
+  },
+  {
+    "name": "Cree (child)",
+    "type": "DPS",
+    "hp": 2.0,
+    "ability": "Shortsword: 1 damage",
+    "actionType": "attack",
+    "tier": 1,
+    "slot_cost": 1.0,
+    "ip_cost": 0,
+    "id": "cree_kid",
     "starter": true
   },
   {
@@ -84,18 +84,6 @@
     "starter": false
   },
   {
-    "name": "Gnolls",
-    "type": "DPS",
-    "hp": 6.0,
-    "ability": "Volley: 4 damage",
-    "actionType": "attack",
-    "tier": 2,
-    "slot_cost": 2.0,
-    "ip_cost": 10,
-    "id": "gnolls",
-    "starter": false
-  },
-  {
     "name": "Cree (teen)",
     "type": "DPS",
     "hp": 6.0,
@@ -105,6 +93,18 @@
     "slot_cost": 2.0,
     "ip_cost": 10,
     "id": "cree_teen",
+    "starter": false
+  },
+  {
+    "name": "Gnolls",
+    "type": "DPS",
+    "hp": 6.0,
+    "ability": "Volley: 4 damage",
+    "actionType": "attack",
+    "tier": 2,
+    "slot_cost": 2.0,
+    "ip_cost": 10,
+    "id": "gnolls",
     "starter": false
   },
   {
@@ -120,18 +120,6 @@
     "starter": false
   },
   {
-    "name": "Grogu",
-    "type": "DPS",
-    "hp": 7.0,
-    "ability": "Lightning Bolt: 6 damage",
-    "actionType": "attack",
-    "tier": 2,
-    "slot_cost": 2.0,
-    "ip_cost": 12,
-    "id": "grogu",
-    "starter": false
-  },
-  {
     "name": "Syranna",
     "type": "DPS",
     "hp": 7.0,
@@ -144,6 +132,18 @@
     "starter": false
   },
   {
+    "name": "Grogu",
+    "type": "DPS",
+    "hp": 7.0,
+    "ability": "Lightning Bolt: 6 damage",
+    "actionType": "attack",
+    "tier": 2,
+    "slot_cost": 2.0,
+    "ip_cost": 12,
+    "id": "grogu",
+    "starter": false
+  },
+  {
     "name": "Eddie",
     "type": "Healer",
     "hp": 7.0,
@@ -153,6 +153,138 @@
     "slot_cost": 2.0,
     "ip_cost": 12,
     "id": "eddie",
+    "starter": false
+  },
+  {
+    "name": "Lynel Richie",
+    "type": "DPS",
+    "hp": 10.0,
+    "ability": "Charge: 6 damage",
+    "actionType": "attack",
+    "tier": 3,
+    "slot_cost": 3.0,
+    "ip_cost": 25,
+    "id": "lynel_richie",
+    "starter": false
+  },
+  {
+    "name": "Marlon Humphrey",
+    "type": "DPS",
+    "hp": 10.0,
+    "ability": "Whale Smash: 6 damage",
+    "actionType": "attack",
+    "tier": 3,
+    "slot_cost": 3.0,
+    "ip_cost": 25,
+    "id": "marlon_humphrey",
+    "starter": false
+  },
+  {
+    "name": "Elias Destry",
+    "type": "DPS",
+    "hp": 10.0,
+    "ability": "Blight: 6 damage",
+    "actionType": "attack",
+    "tier": 3,
+    "slot_cost": 3.0,
+    "ip_cost": 25,
+    "id": "elias_destry",
+    "starter": false
+  },
+  {
+    "name": "Momoa Destry",
+    "type": "DPS",
+    "hp": 10.0,
+    "ability": "Wild Surge Bolt of Light: 6 damage",
+    "actionType": "attack",
+    "tier": 3,
+    "slot_cost": 3.0,
+    "ip_cost": 25,
+    "id": "momoa_destry",
+    "starter": false
+  },
+  {
+    "name": "Willis",
+    "type": "Support",
+    "hp": 12.0,
+    "ability": "Gaseous Form: Target avoids all damage for 1 turn",
+    "actionType": "support",
+    "tier": 3,
+    "slot_cost": 3.0,
+    "ip_cost": 30,
+    "id": "willis",
+    "starter": false
+  },
+  {
+    "name": "Scout",
+    "type": "Support",
+    "hp": 12.0,
+    "ability": "Rally the Troops: Gain +1 AP",
+    "actionType": "support",
+    "tier": 3,
+    "slot_cost": 3.0,
+    "ip_cost": 30,
+    "id": "scout",
+    "starter": false
+  },
+  {
+    "name": "Miriam",
+    "type": "DPS",
+    "hp": 15.0,
+    "ability": "Sneak Attack: 10 damage",
+    "actionType": "attack",
+    "tier": 4,
+    "slot_cost": 4.0,
+    "ip_cost": 50,
+    "id": "miriam",
+    "starter": false
+  },
+  {
+    "name": "Callis",
+    "type": "DPS",
+    "hp": 18.0,
+    "ability": "Great Weapon Master: 8 damage",
+    "actionType": "attack",
+    "tier": 4,
+    "slot_cost": 4.0,
+    "ip_cost": 50,
+    "id": "callis",
+    "starter": false
+  },
+  {
+    "name": "Sylara",
+    "type": "DPS",
+    "hp": 18.0,
+    "ability": "Eldtrich Blast: 10 damage",
+    "actionType": "attack",
+    "tier": 4,
+    "slot_cost": 4.0,
+    "ip_cost": 75,
+    "id": "sylara",
+    "starter": false
+  },
+  {
+    "name": "Fjlurganmyr",
+    "type": "DPS",
+    "hp": 20.0,
+    "ability": "Lightning Arrow: 8 damage",
+    "actionType": "attack",
+    "tier": 4,
+    "slot_cost": 4.0,
+    "ip_cost": 75,
+    "id": "fjlurganmyr",
+    "starter": false
+  },
+  {
+    "name": "Br'er",
+    "type": "Suppor",
+    "hp": 20.0,
+    "ability": "Diasming attack: 5 damage, and next attack deals half damage",
+    "actionType": "support",
+    "tier": 4,
+    "slot_cost": 4.0,
+    "ip_cost": 75,
+    "id": "brer",
     "starter": false
   }
 ]

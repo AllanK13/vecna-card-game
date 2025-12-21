@@ -46,7 +46,10 @@ export function renderStats(root, ctx){
   // characters
   const charUsage = meta.characterUsage || {};
   // Map character IDs to names from data and sum counts by name
-  const cards = (ctx && ctx.data && ctx.data.cards) ? ctx.data.cards : [];
+  // include legendary hero entries (items in legendary with `hp`) so their IDs map to proper names
+  const baseCards = (ctx && ctx.data && ctx.data.cards) ? ctx.data.cards : [];
+  const legendaryCards = (ctx && ctx.data && ctx.data.legendary) ? (ctx.data.legendary.filter(l => l && typeof l.hp === 'number')) : [];
+  const cards = legendaryCards.concat(baseCards);
   const charNameCounts = {};
   Object.entries(charUsage).forEach(([id, cnt])=>{
     const card = cards.find(c=> c.id===id) || cards.find(c=> c.name===id);
@@ -61,7 +64,10 @@ export function renderStats(root, ctx){
 
   // summons
   // summons: map summon IDs to names and sum counts by name
-  const summonsData = (ctx && ctx.data && ctx.data.summons) ? ctx.data.summons : [];
+  // include legendary summons (legendary entries without `hp`)
+  const baseSummons = (ctx && ctx.data && ctx.data.summons) ? ctx.data.summons : [];
+  const legendarySummons = (ctx && ctx.data && ctx.data.legendary) ? ctx.data.legendary.filter(l => l && typeof l.hp !== 'number') : [];
+  const summonsData = baseSummons.concat(legendarySummons);
   const summonUsage = meta.summonUsage || {};
   const summonNameCounts = {};
   Object.entries(summonUsage).forEach(([id, cnt])=>{

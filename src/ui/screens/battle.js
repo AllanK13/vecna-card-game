@@ -3,7 +3,7 @@ import { navigate } from '../router.js';
 import { AudioManager } from '../../engine/audio.js';
 import { saveMeta } from '../../engine/meta.js';
 
-function slotNode(slotObj, idx, handlers={}, highlight=false, targetHighlight=false){
+function slotNode(slotObj, idx, handlers={}, highlight=false, targetHighlight=false, ctx=null){
   const container = el('div',{class:'card-wrap panel'});
   if(highlight) container.classList.add('pending-slot');
   if(targetHighlight) container.classList.add('pending-target');
@@ -16,7 +16,17 @@ function slotNode(slotObj, idx, handlers={}, highlight=false, targetHighlight=fa
     return container;
   }
   // hero image tile (show current HP in the card stats) and temp HP badge
-  const tile = cardTile(slotObj.base, { currentHp: slotObj.hp, tempHp: slotObj.tempHp, hideSlot: true, hideCost: true });
+  const opts = { currentHp: slotObj.hp, tempHp: slotObj.tempHp, hideSlot: true, hideCost: true };
+  // if this hero is Griff and the encounter selected a variant, pass imageOverride
+  try{
+    const id = (slotObj.base && slotObj.base.id) ? slotObj.base.id : null;
+    // Choose a random griff variant image for display (griff1..griff7)
+    if(id === 'griff'){
+      const n = Math.floor(Math.random() * 7) + 1;
+      opts.imageOverride = `./assets/griff${n}.png?v=${Math.floor(Math.random()*1000000)}`;
+    }
+  }catch(e){}
+  const tile = cardTile(slotObj.base, opts);
   container.appendChild(tile);
   // show a defend/shield badge when this hero is defending
   if(slotObj.defending){
@@ -248,6 +258,8 @@ export function renderBattle(root, ctx){
     availableSummons.forEach(s=>{
       // build the summon card (cardTile returns a `.card` element)
       const sCard = cardTile(s, { hideSlot: true, hideCost: true });
+      // shrink Blackrazor image in the summons panel by tagging the card
+      if(s && s.id === 'blackrazor'){ try{ sCard.classList.add('blackrazor'); }catch(e){} }
       const used = ctx.encounter.summonUsed && ctx.encounter.summonUsed[s.id];
       const cd = ctx.encounter.summonCooldowns && (ctx.encounter.summonCooldowns[s.id]||0);
       const btn = el('button',{class:'btn'},[ used ? 'Used' : (cd>0 ? 'Cooldown: '+cd : 'Cast')]);
@@ -289,7 +301,9 @@ export function renderBattle(root, ctx){
   const stunned = ctx.encounter.enemy && (ctx.encounter.enemy.stunnedTurns || 0) > 0;
   if(stunned){
     try{ enemyCard.style.position = enemyCard.style.position || 'relative'; }catch(e){}
-    const stunBadge = el('div',{class:'enemy-stun-badge', title: 'Stunned: '+(ctx.encounter.enemy.stunnedTurns||0)+' turns'},['💫']);
+    const st = ctx.encounter.enemy.stunnedTurns;
+    const title = (!Number.isFinite(st)) ? 'Stunned: Rest of battle' : ('Stunned: '+(st||0)+' turns');
+    const stunBadge = el('div',{class:'enemy-stun-badge', title},['💫']);
     enemyCard.appendChild(stunBadge);
   }
   enemyArea.appendChild(enemyCard);
@@ -303,7 +317,7 @@ export function renderBattle(root, ctx){
   const pendingAny = pendingReplace || pendingSummon || pendingAction || null;
 
   function makeSlot(i){
-    const isTarget = Boolean(ctx.pendingAction && ctx.pendingAction.type === 'heal' && ctx.encounter.playfield[i]);
+    const isTarget = Boolean(ctx.pendingAction && (ctx.pendingAction.type === 'heal' || ctx.pendingAction.type === 'willis') && ctx.encounter.playfield[i]);
     // Highlight logic:
     // - when in place mode: highlight only empty slots
     // - when in replace mode: highlight only occupied slots
@@ -316,7 +330,7 @@ export function renderBattle(root, ctx){
         highlight = Boolean(ctx.encounter.playfield[i]);
       }
     }
-    return slotNode(ctx.encounter.playfield[i], i, {
+    const container = slotNode(ctx.encounter.playfield[i], i, {
       ap: ctx.encounter.ap,
       onAction(idx){
         if(ctx.encounter.ap < 1) { if(ctx.setMessage) ctx.setMessage('Not enough AP'); return; }
@@ -324,6 +338,13 @@ export function renderBattle(root, ctx){
         const hero = ctx.encounter.playfield[idx];
         const actionType = (hero && hero.base && hero.base.actionType) ? hero.base.actionType : null;
         if(actionType === 'support'){
+          // Willis requires selecting a target to protect
+          if(hero && hero.base && hero.base.id === 'willis'){
+            ctx.pendingAction = { type: 'willis', from: idx };
+            if(ctx.setMessage) ctx.setMessage('Click a space to select a target to protect');
+            ctx.onStateChange();
+            return;
+          }
           // immediate apply support (e.g., Piter's Help or Shalendra)
           const res = ctx.playHeroAction(idx);
           if(!res.success){ if(ctx.setMessage) ctx.setMessage(res.reason||'Action failed'); }
@@ -344,6 +365,9 @@ export function renderBattle(root, ctx){
         ctx.playHeroAction(idx);
         ctx.onStateChange();
       },
+      highlight,
+      isTarget,
+      ctx,
       onDefend(idx){
         if(ctx.encounter.ap < 1) { if(ctx.setMessage) ctx.setMessage('Not enough AP'); return; }
         if(typeof ctx.defendHero === 'function'){
@@ -364,6 +388,15 @@ export function renderBattle(root, ctx){
         }
         // if an action is pending (e.g., a heal), apply it to this target
         if(ctx.pendingAction && ctx.pendingAction.type === 'heal'){
+          const from = ctx.pendingAction.from;
+          const res = ctx.playHeroAction(from, idx);
+          if(!res.success) { if(ctx.setMessage) ctx.setMessage(res.reason||'failed'); }
+          ctx.pendingAction = null;
+          ctx.onStateChange();
+          return;
+        }
+        // Willis protection target selection
+        if(ctx.pendingAction && ctx.pendingAction.type === 'willis'){
           const from = ctx.pendingAction.from;
           const res = ctx.playHeroAction(from, idx);
           if(!res.success) { if(ctx.setMessage) ctx.setMessage(res.reason||'failed'); }
@@ -443,7 +476,40 @@ export function renderBattle(root, ctx){
         ctx.pendingReplace = null;
         ctx.onStateChange();
       }
-    }, highlight, isTarget);
+    }, highlight, isTarget, ctx);
+
+    // Show Lumalia pending-effect badge when her delayed effect is scheduled for this slot
+    try{
+      if(ctx && ctx.encounter && Array.isArray(ctx.encounter.pendingEffects)){
+        const hasLum = ctx.encounter.pendingEffects.find(e => e && e.id === 'lumalia' && e.slot === i);
+        if(hasLum){
+          container.style.position = container.style.position || 'relative';
+          const lumBadge = el('div',{class:'lumalia-badge', title: 'Lumalia: delayed effect'},['🕓']);
+          container.appendChild(lumBadge);
+        }
+      }
+    }catch(e){}
+
+    // Show Willis protection badge when a hero is currently protected
+    try{
+      const hero = ctx && ctx.encounter && ctx.encounter.playfield ? ctx.encounter.playfield[i] : null;
+      if(hero && hero.protected && hero.protected.source === 'willis'){
+        container.style.position = container.style.position || 'relative';
+        const wBadge = el('div',{class:'willis-badge', title: 'Protected (Willis)'},['🌪']);
+        container.appendChild(wBadge);
+      }
+    }catch(e){}
+
+    // Disable Action button for heroes whose support was already used this round
+    try{
+      const hero = ctx && ctx.encounter && ctx.encounter.playfield ? ctx.encounter.playfield[i] : null;
+      const actionBtn = container.querySelector && container.querySelector('.slot-action');
+      if(actionBtn && hero && hero.base && hero.base.id && ctx.encounter && ctx.encounter.supportUsed && ctx.encounter.supportUsed[hero.base.id]){
+        actionBtn.setAttribute('disabled','');
+      }
+    }catch(e){}
+
+    return container;
   }
 
   // place slot 3 (index 2) on the left, and slots 1 & 2 (indices 0 & 1) stacked to the right

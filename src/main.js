@@ -76,7 +76,10 @@ async function loadData(){
 function createEncounterSession(enemyIndex, chosenIds, rng){
   // keep a local mutable copy of the chosen ids so we can rebuild the deck
   let chosen = Array.isArray(chosenIds) ? chosenIds.slice() : [];
-  let deck = buildDeck(data.cards, chosen, rng);
+  // allow legendary entries that are full hero cards (have `hp`) to be used as card definitions
+  const legendaryCards = (data.legendary || []).filter(l => l && typeof l.hp === 'number');
+  const cardDefs = (data.cards || []).concat(legendaryCards);
+  let deck = buildDeck(cardDefs, chosen, rng);
   let currentEnemyIndex = enemyIndex || 0;
   let enemy = data.enemies[currentEnemyIndex];
   let encounter = startEncounter({...enemy}, deck, rng, { apPerTurn: meta.apPerTurn || 3 });
@@ -287,7 +290,10 @@ function createEncounterSession(enemyIndex, chosenIds, rng){
                 const rebuildIds = (allIdsList.length>0) ? allIdsList : chosen.slice();
                 // update chosen so subsequent rebuilds preserve this pool
                 chosen = rebuildIds.slice();
-                deck = buildDeck(data.cards, rebuildIds, RNG);
+                // rebuild deck using combined card defs (include legendary heroes)
+                const legendaryCards = (data.legendary || []).filter(l => l && typeof l.hp === 'number');
+                const cardDefs = (data.cards || []).concat(legendaryCards);
+                deck = buildDeck(cardDefs, rebuildIds, RNG);
               }catch(e){ console.warn('Failed to rebuild deck for next encounter', e); }
               encounter = startEncounter({...enemy}, deck, RNG, { apPerTurn: meta.apPerTurn || 3 });
               ctx.encounter = encounter;
@@ -362,7 +368,18 @@ function handlePlayHeroAction(encounter, ctx, slot, targetIndex){
       }
     }catch(e){}
   } else if(res.type === 'heal'){
-    if(ctx.setMessage) ctx.setMessage('Hero healed '+res.healed+' HP (now '+res.hp+')');
+    // handle single-target heal (has `hp`) and party heal (has `targets` array)
+    if(res.hp !== undefined){
+      if(ctx.setMessage) ctx.setMessage('Hero healed '+res.healed+' HP (now '+res.hp+')');
+    } else if(Array.isArray(res.targets) && res.targets.length>0){
+      const parts = res.targets.map(t => {
+        const name = (encounter.playfield[t.slot] && encounter.playfield[t.slot].base && encounter.playfield[t.slot].base.name) ? encounter.playfield[t.slot].base.name : ('space '+(t.slot+1));
+        return (name + ': ' + (t.hp||0));
+      });
+      if(ctx.setMessage) ctx.setMessage('Healed '+res.healed+' HP to party — '+parts.join(', '));
+    } else {
+      if(ctx.setMessage) ctx.setMessage('Healed '+res.healed+' HP');
+    }
   } else if(res.type === 'support'){
     if(ctx.setMessage) ctx.setMessage('Support ability used');
   }

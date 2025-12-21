@@ -22,7 +22,7 @@ export function renderUpgrades(root, ctx){
   // Recruit Heroes (by tier)
   const recruit = section('Recruit Heroes');
   [1,2,3,4].forEach(t=>{
-    const tierWrap = el('div',{class:'tier-section'},[]);
+    const tierWrap = el('div',{class:'tier-section tier-'+t},[]);
     tierWrap.appendChild(el('h3',{class:'section-title'},[tierName(t)]));
     const grid = el('div',{class:'card-grid'},[]);
     (ctx.data.cards||[]).filter(c=>Number(c.tier)===t).forEach(c=>{
@@ -35,7 +35,10 @@ export function renderUpgrades(root, ctx){
       if(!owned && cost>0 && ctx.meta && ctx.meta.ip < cost) btn.setAttribute('disabled','');
       btn.addEventListener('click',()=>{ if(ctx.buyLegendary) ctx.buyLegendary(c.id); else if(ctx.setMessage) ctx.setMessage('No buy handler'); });
       footer.appendChild(btn);
-      cardWrap.appendChild(cardTile(c,{hideSlot:false, hideCost:true, footer}));
+      // On the upgrades screen, show Griff using griff1.png (fixed variant)
+      const opts = { hideSlot:false, hideCost:true, footer };
+      try{ if(c && c.id === 'griff') opts.imageOverride = './assets/griff1.png'; }catch(e){}
+      cardWrap.appendChild(cardTile(c, opts));
       grid.appendChild(cardWrap);
     });
     tierWrap.appendChild(grid);
@@ -45,7 +48,7 @@ export function renderUpgrades(root, ctx){
 
   // Hire Summons
   const summonsSec = section('Hire Summons');
-  const sGrid = el('div',{class:'card-grid'},[]);
+  const sGrid = el('div',{class:'card-grid summons-grid'},[]);
   (ctx.data.summons||[]).forEach(s=>{
     const owned = (ctx.meta && Array.isArray(ctx.meta.ownedSummons) && ctx.meta.ownedSummons.includes(s.id));
     const hasEarnedIp = ctx.meta && ((ctx.meta.totalIpEarned||0) > 0);
@@ -59,7 +62,10 @@ export function renderUpgrades(root, ctx){
     if(!owned && ctx.meta && ctx.meta.ip < cost) btn.setAttribute('disabled','');
     btn.addEventListener('click',()=>{ if(ctx.buyLegendary) ctx.buyLegendary(s.id); else if(ctx.setMessage) ctx.setMessage('No buy handler'); });
     footer.appendChild(btn);
-    wrap.appendChild(cardTile(s,{hideSlot:true, hideCost:true, footer}));
+    // Summons on the upgrades screen: if a summon id matches griff, use griff1
+    const sOpts = { hideSlot:true, hideCost:true, footer };
+    try{ if(s && s.id === 'griff') sOpts.imageOverride = './assets/griff1.png'; }catch(e){}
+    wrap.appendChild(cardTile(s, sOpts));
     sGrid.appendChild(wrap);
   });
   summonsSec.appendChild(sGrid);
@@ -102,12 +108,14 @@ export function renderUpgrades(root, ctx){
   // Legendary Store (hidden unless unlocked)
   if(ctx.meta && ctx.meta.legendaryUnlocked){
     const legSec = section('Legendary Store');
-    const lGrid = el('div',{class:'card-grid'},[]);
+    const lGrid = el('div',{class:'card-grid legendary-grid'},[]);
     (ctx.data.legendary||[]).forEach(it=>{
       const elCard = el('div',{class:'card-wrap panel'},[]);
       // cost and purchase button
       const footer = el('div',{class:'row'},[]);
-      const owned = (ctx.meta && Array.isArray(ctx.meta.ownedSummons) && ctx.meta.ownedSummons.includes(it.id));
+      // determine if this legendary is a hero/card (has hp or explicit kind)
+      const isCard = typeof it.hp === 'number';
+      const owned = isCard ? (ctx.meta && Array.isArray(ctx.meta.ownedCards) && ctx.meta.ownedCards.includes(it.id)) : (ctx.meta && Array.isArray(ctx.meta.ownedSummons) && ctx.meta.ownedSummons.includes(it.id));
       const cost = Number(it.ip_cost||0);
       const buy = el('button',{class:'btn'},[ owned ? 'Purchased' : ('Recruit: '+cost+' IP') ]);
       if(owned) buy.setAttribute('disabled','');
@@ -115,7 +123,12 @@ export function renderUpgrades(root, ctx){
       buy.addEventListener('click',()=>{ if(ctx.buyLegendary) ctx.buyLegendary(it.id); else if(ctx.setMessage) ctx.setMessage('No buy handler'); });
       footer.appendChild(buy);
       // use the shared cardTile renderer so images/icons are shown consistently
-      elCard.appendChild(cardTile(it, { hideSlot: true, hideCost: true, footer }));
+      // add a special class for Blackrazor so we can size its image differently
+      if(it && it.id === 'blackrazor'){ try{ elCard.classList.add('blackrazor'); }catch(e){} }
+      // Legendary store: render fixed griff1 for Griff
+      const lOpts = { hideSlot: true, hideCost: true, footer };
+      try{ if(it && it.id === 'griff') lOpts.imageOverride = './assets/griff1.png'; }catch(e){}
+      elCard.appendChild(cardTile(it, lOpts));
       lGrid.appendChild(elCard);
     });
     legSec.appendChild(lGrid);

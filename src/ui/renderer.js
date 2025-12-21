@@ -20,12 +20,36 @@ export function cardTile(item, opts={}){
   if(item.name) bases.push(item.name.replace(/\s+/g,'_'));
   if(item.name) bases.push(item.name.replace(/\s+/g,'').toLowerCase());
   if(item.name) bases.push(item.name.replace(/\s+/g,'_').toLowerCase());
+  // Special-case: Griff uses multiple numbered art assets (griff1..griff7).
+  // Try those first when rendering a Griff card so we pick an existing file.
+  if(item.id === 'griff'){
+    const griffs = [];
+    for(let i=1;i<=7;i++) griffs.push('griff'+i);
+    bases.unshift(...griffs);
+  }
   // dedupe
   const seen = new Set();
   const candidates = bases.filter(b=>{ if(!b) return false; const k=b; if(seen.has(k)) return false; seen.add(k); return true; });
   const exts = ['png','jpg','webp'];
   let tryIndex = 0;
   const img = el('img',{alt:item.name, class:'card-image'});
+  // allow callers to force a specific image filename (e.g., per-encounter variant)
+  if(opts.imageOverride){
+    try{
+      // if override looks like a path, use it; otherwise treat as asset filename
+      if(typeof opts.imageOverride === 'string'){
+        // normalize common asset-style overrides so they resolve relative to the app
+        const o = opts.imageOverride;
+        if(o.indexOf('/') === -1){
+          img.src = './assets/'+encodeURIComponent(o);
+        } else if(o.startsWith('assets/')){
+          img.src = './'+o;
+        } else {
+          img.src = o;
+        }
+      }
+    }catch(e){}
+  }
   img.addEventListener('error', ()=>{
     // advance to next candidate
     tryIndex++;
@@ -33,10 +57,13 @@ export function cardTile(item, opts={}){
     if(tryIndex >= total){ img.style.display='none'; return; }
     const ci = Math.floor(tryIndex / exts.length);
     const ei = tryIndex % exts.length;
-    img.src = 'assets/'+encodeURIComponent(candidates[ci])+'.'+exts[ei];
+    img.src = './assets/'+encodeURIComponent(candidates[ci])+'.'+exts[ei];
   });
-  // start with first candidate
-  if(candidates.length>0){ img.src = 'assets/'+encodeURIComponent(candidates[0])+'.png'; } else { img.style.display='none'; }
+  // start with first candidate only if no override already set
+  if(!img.src){
+    if(candidates.length>0){ img.src = './assets/'+encodeURIComponent(candidates[0])+'.png'; }
+    else { img.style.display='none'; }
+  }
   d.appendChild(img);
   // insert a name label above the image if present (shows character/summon/enemy names)
   if(item.name){

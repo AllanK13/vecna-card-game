@@ -61,7 +61,7 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
 
 .upgrades-screen .card-wrap{
   /* match the base card height so every tile occupies the same vertical space */
-  height: 460px;
+  height: 380px;
   display:flex;
   flex-direction:column;
 }
@@ -119,6 +119,37 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
 .upgrades-screen .meta-grid .card-wrap{ height:150px !important; }
 .upgrades-screen .meta-grid .card{ height:150px !important; flex:0 0 auto !important }
 .upgrades-screen .meta-grid .card .card-footer{ margin-top:auto }
+
+/* Summons on the Upgrades screen: use a different tile height than other upgrades */
+.upgrades-screen .summons-grid .card-wrap,
+.upgrades-screen .summons-grid .card{
+  height: 450px !important;
+  flex: 0 0 auto !important;
+}
+.upgrades-screen .summons-grid .card .card-image{ max-height: calc(100% - 72px) !important }
+
+/* Legendary Store tiles: use a distinct (taller) height than other upgrades */
+.upgrades-screen .legendary-grid .card-wrap,
+.upgrades-screen .legendary-grid .card{
+  height: 410px !important;
+  flex: 0 0 auto !important;
+}
+.upgrades-screen .legendary-grid .card .card-image{ max-height: calc(100% - 72px) !important }
+
+/* Make Blackrazor image smaller in the Legendary Store while preserving aspect ratio */
+.upgrades-screen .legendary-grid .card-wrap.blackrazor .card-image{
+  width: 80% !important;
+  height: auto !important;
+  max-height: calc(100% - 72px) !important;
+}
+
+/* Apply same Blackrazor sizing in the battle UI (summons and general card contexts) */
+.battle-panel .summons-small .card.blackrazor .card-image,
+.battle-panel .card.blackrazor .card-image{
+  width: 88% !important;
+  height: auto !important;
+  max-height: calc(100% - 72px) !important;
+}
 
 /* Stats screen styling */
 .stats-screen{max-width:880px;margin:20px auto;padding:18px;display:flex;flex-direction:column;gap:14px;align-items:stretch}
@@ -188,6 +219,36 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
   box-shadow:0 6px 18px rgba(0,0,0,0.45);
 }
 
+/* Lumalia pending-effect badge (bottom-left of hero card in playfield) */
+.lumalia-badge{
+  position:absolute;
+  left:8px;
+  bottom:32px;
+  background:linear-gradient(180deg,#fde68a,#f59e0b);
+  color:#1f2937;
+  padding:6px 8px;
+  border-radius:8px;
+  font-weight:900;
+  font-size:16px;
+  z-index:60;
+  box-shadow:0 6px 18px rgba(0,0,0,0.45);
+}
+
+/* Willis protection badge (bottom-left of protected hero card) */
+.willis-badge{
+  position:absolute;
+  left:48px;
+  bottom:32px;
+  background:linear-gradient(180deg,#c7f9ff,#60a5fa);
+  color:#05204a;
+  padding:6px 8px;
+  border-radius:8px;
+  font-weight:900;
+  font-size:16px;
+  z-index:60;
+  box-shadow:0 6px 18px rgba(0,0,0,0.45);
+}
+
 /* slot and enemy HP styling */
 .slot-header{font-size:15px;font-weight:800;color:var(--accent);font-family:Segoe UI, Roboto, "Trebuchet MS", Georgia, serif;text-shadow:0 1px 0 rgba(0,0,0,0.6);margin-bottom:6px}
 .enemy-hp{font-size:24px;font-weight:900;color:#e63b3bdc;font-family:Segoe UI, Roboto, "Trebuchet MS", Georgia, serif;text-shadow:0 6px 14px rgba(0,0,0,0.85);margin:6px 0;line-height:0.9}
@@ -224,10 +285,10 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
 }
 
 /* Make sure upgrades screen card-wrap matches responsive card heights */
-@media (min-width:1001px){ .upgrades-screen .card-wrap{ height:460px } }
-@media (max-width:1000px){ .upgrades-screen .card-wrap{ height:400px } }
-@media (max-width:720px){ .upgrades-screen .card-wrap{ height:360px } }
-@media (max-width:420px){ .upgrades-screen .card-wrap{ height:320px } }
+@media (min-width:1001px){ .upgrades-screen .card-wrap{ height:380px } }
+@media (max-width:1000px){ .upgrades-screen .card-wrap{ height:340px } }
+@media (max-width:720px){ .upgrades-screen .card-wrap{ height:320px } }
+@media (max-width:420px){ .upgrades-screen .card-wrap{ height:280px } }
 
 /* Prevent cards on the Upgrades screen from resizing with the window
    Keep a fixed tile size so footers/buttons remain aligned regardless
@@ -235,7 +296,7 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
 .upgrades-screen .card-wrap,
 .upgrades-screen .card{
   width: 220px !important;
-  height: 450px !important;
+  height: 400px !important;
   flex: 0 0 auto !important;
   transition: none !important;
 }
@@ -312,10 +373,10 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
 .playfield-front > .card-wrap:first-child{margin-bottom:12px}
 
 /* Make playfield wrappers match the card sizing so cards don't overflow or overlap */
-  .playfield .card-wrap{width:200px}
-  .playfield .card{width:100%;}
-  .playfield .card{height:240px}
-  .playfield .card .card-image{max-height:calc(100% - 52px) !important;width:90%;margin:0 auto;object-fit:contain}
+.playfield .card-wrap{width:200px}
+.playfield .card{width:100%;}
+.playfield .card{height:240px}
+.playfield .card .card-image{max-height:calc(100% - 52px) !important;width:90%;margin:0 auto;object-fit:contain}
 /* Ensure action/defend buttons for playfield slots sit below the character card and are centered */
 .playfield .card-wrap{display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:0 !important}
 .playfield .card-wrap .row{width:100%;justify-content:center;margin-top:50px;display:flex;gap:8px;align-items:center}
@@ -675,8 +736,56 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
   margin-bottom:18px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.45);
 }
-.upg-section .section-title{font-size:20px;color:var(--accent);margin:0 0 8px 0}
-.tier-section{margin-bottom:12px}
+.upg-section .section-title{margin:0 0 8px 0}
+
+/* Fancy main section titles (Upgrades sections like "Recruit Heroes", "Hire Summons", "Metagame", "Legendary Store") */
+.upg-section h2.section-title{
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size:28px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:1.4px;
+  margin:0 0 12px 0;
+  background: linear-gradient(90deg,#ffd86b,#ffb84d,#f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 3px 12px rgba(0,0,0,0.6);
+}
+
+/* Tier / subsection titles (smaller but still stylized) */
+.upg-section h3.section-title{
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size:18px;
+  font-weight:800;
+  color:var(--accent);
+  letter-spacing:0.8px;
+  margin:8px 0 10px 0;
+  text-shadow:0 2px 6px rgba(0,0,0,0.45);
+}
+
+/* Tier badges: stylized pill labels per tier */
+.tier-section h3.section-title{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight:900;
+  font-size:16px;
+  text-transform:uppercase;
+  letter-spacing:1.2px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.38);
+  margin:6px 0 12px 0;
+}
+.tier-section.tier-1 h3.section-title{ background: linear-gradient(90deg,#fff7cc,#ffd86b); color:#1f2937; }
+.tier-section.tier-2 h3.section-title{ background: linear-gradient(90deg,#e6ffed,#86efac); color:#064029; }
+.tier-section.tier-3 h3.section-title{ background: linear-gradient(90deg,#dbeafe,#60a5fa); color:#05204a; }
+.tier-section.tier-4 h3.section-title{ background: linear-gradient(90deg,#f5d4ff,#c084fc); color:#2b0b3a; }
+
+/* Slight size adjustments for small screens */
+@media (max-width:520px){
+  .tier-section h3.section-title{ font-size:14px; padding:6px 10px; }
+}
+.tier-section{margin-bottom:48px}
 .upg-section .card-grid{display:flex;gap:12px;flex-wrap:wrap}
 .upg-section .card{width:220px;height:auto;padding:12px;border-radius:12px;background:linear-gradient(180deg,#072a3b,#023047);box-shadow:inset 0 -2px 0 rgba(255,255,255,0.02),0 8px 20px rgba(0,0,0,0.45)}
 .upg-section .card-wrap{width:220px;display:flex;flex-direction:column;box-sizing:border-box}
@@ -706,7 +815,43 @@ body{background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
 @media (max-width:520px){
   .upg-section .card{width:100%;}
 }
-.upgrades-screen h1{font-family: Georgia, 'Times New Roman', serif; font-size:36px; text-align:center; margin:6px 0 12px 0; color:var(--accent); letter-spacing:1px; text-shadow:0 3px 12px rgba(0,0,0,0.6)}
+.upgrades-screen h1{
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size:48px;
+  font-weight:900;
+  text-align:center;
+  margin:6px 0 18px 0;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  color:transparent;
+  /* warm gradient fill clipped to text */
+  background: linear-gradient(90deg,#ffd86b 0%,#ffb84d 50%,#f97316 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 18px rgba(255,200,80,0.06);
+  position:relative;
+}
+.upgrades-screen h1::before{
+  content: '✦';
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  top:-10px;
+  color:#ffd86b;
+  font-size:20px;
+  text-shadow:0 2px 6px rgba(0,0,0,0.6);
+}
+.upgrades-screen h1::after{
+  content: '';
+  display:block;
+  width:260px;
+  height:6px;
+  margin:12px auto 0;
+  border-radius:4px;
+  background: linear-gradient(90deg,#f59e0b,#ffb84d);
+  box-shadow:0 6px 18px rgba(0,0,0,0.45);
+}
 .upgrades-screen .btn{font-family: 'Segoe UI', Roboto, Arial, sans-serif; transition:transform 160ms ease, box-shadow 160ms ease}
 .upgrades-screen .btn:not([disabled]):hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(0,0,0,0.36)}
 

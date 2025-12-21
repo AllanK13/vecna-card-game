@@ -157,9 +157,16 @@ export function renderStart(root, ctx){
   }
   // render selectable cards: starters and any recruited/owned characters
   const ownedIds = (ctx.meta && Array.isArray(ctx.meta.ownedCards)) ? ctx.meta.ownedCards : [];
-  (ctx.data.cards||[]).filter(c => c && (c.starter || ownedIds.includes(c.id))).forEach(c=>{
+  // include both regular cards and any legendary items that are full hero cards (have `hp`)
+  const poolCards = [];
+  (ctx.data.cards||[]).forEach(c=> poolCards.push(c));
+  (ctx.data.legendary||[]).forEach(l=>{ if(l && typeof l.hp === 'number') poolCards.push(l); });
+  poolCards.filter(c => c && (c.starter || ownedIds.includes(c.id))).forEach(c=>{
     cardsById[c.id] = c;
-    const tile = cardTile(c, { hideCost: true, slotFirst: true });
+    const opts = { hideCost: true, slotFirst: true };
+    // If this card is Griff, pick a random griff1..griff7 for the start screen
+    try{ if(c && c.id === 'griff'){ const n = Math.floor(Math.random()*7)+1; opts.imageOverride = `./assets/griff${n}.png?v=${Math.floor(Math.random()*1000000)}`; } }catch(e){}
+    const tile = cardTile(c, opts);
     tile.style.cursor='pointer';
     tile.addEventListener('click',()=>{
       if(selected.has(c.id)){

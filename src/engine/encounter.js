@@ -16,8 +16,14 @@ export function startEncounter(enemyDef, deck, rng, opts={}){
     exhaustedThisEncounter: [],
     summonUsed: {},
     summonCooldowns: {}
+    ,supportUsed: {}
     ,pendingEffects: []
   };
+  // Choose a random Griff image variant for this encounter (if needed by UI).
+  try{
+    const griffVariants = ['assets/griff1.png','assets/griff2.png','assets/griff3.png','assets/griff4.png','assets/griff5.png','assets/griff6.png','assets/griff7.png'];
+    state._griffImage = griffVariants[Math.floor(Math.random() * griffVariants.length)];
+  }catch(e){ state._griffImage = null; }
   // All character cards should already be provided in `deck.hand` by the deck builder.
   // Drawing has been removed — no action needed here.
   return state;
@@ -75,7 +81,20 @@ function resolveSingleTargetAttack(state, dmg, attackIndex, attackName){
   if(idx !== -1){
     const h = state.playfield[idx];
     if(h){
-      let remaining = h.defending ? 0 : dmg;
+      // If this hero is protected (e.g., Willis), they take no damage
+      if(h.protected && h.protected.turns > 0){
+        const heroName = h.base && h.base.name ? h.base.name : null;
+        const ev = { type:'hit', slot: idx, dmg: 0, tempTaken: 0, hpTaken: 0, remainingHp: h.hp, died:false, heroName };
+        ev.attackType = 'single';
+        if(typeof attackIndex === 'number') ev.attack = attackIndex+1;
+        if(attackName) ev.attackName = attackName;
+        ev.protected = true;
+        events.push(ev);
+        return events;
+      }
+
+      // If defending, take half damage (rounded up) instead of negating it
+      let remaining = h.defending ? Math.ceil(dmg/2) : dmg;
       let tempTaken = 0;
       if(h.tempHp && h.tempHp>0){ const take = Math.min(h.tempHp, remaining); h.tempHp -= take; tempTaken = take; remaining -= take; }
       let hpTaken = 0;
@@ -95,14 +114,26 @@ function resolveSingleTargetAttack(state, dmg, attackIndex, attackName){
 }
 
 // Centralized AOE attack resolution. Applies the AOE damage rules used
-// throughout the file (base damage halved, defending halves again),
+// throughout the file (defending halves damage for defending heroes),
 // mutates state, and returns an array of events.
 function resolveAoEAttack(state, baseDmg, attackIndex, attackName){
   const events = [];
   for(let i=0;i<state.playfield.length;i++){
     const h = state.playfield[i];
     if(h){
-      let remaining = Math.ceil(baseDmg/2);
+      // If this hero is protected (e.g., Willis), they take no damage from AOE
+      if(h.protected && h.protected.turns > 0){
+        const heroName = h.base && h.base.name ? h.base.name : null;
+        const ev = { type:'hit', slot: i, dmg: 0, tempTaken: 0, hpTaken: 0, remainingHp: h.hp, died:false, heroName };
+        ev.attackType = 'aoe';
+        if(typeof attackIndex === 'number') ev.attack = attackIndex+1;
+        if(attackName) ev.attackName = attackName;
+        ev.protected = true;
+        events.push(ev);
+        continue;
+      }
+      // AOE uses the full base damage; defending heroes still take half.
+      let remaining = baseDmg;
       if(h.defending) remaining = Math.ceil(remaining/2);
       let tempTaken = 0;
       if(h.tempHp && h.tempHp>0){ const take = Math.min(h.tempHp, remaining); h.tempHp -= take; tempTaken = take; remaining -= take; }
@@ -164,12 +195,20 @@ export function playHeroAction(state, slotIndex, targetIndex=null){
   if(!hero) return { success:false, reason:'no hero' };
   const ability = (hero.base && hero.base.ability) ? hero.base.ability.toLowerCase() : '';
   const amount = parseDamageFromAbility(hero.base);
+  // normalize id for legendaries that may not have `base`
+  const hid = (hero.base && hero.base.id) ? hero.base.id : hero.cardId;
   // Determine explicit action type: prefer `actionType` then parse ability text.
   // Normalize to one of: 'dps', 'healer', 'support'. Default -> 'dps'.
   let actionType = (hero.base && hero.base.actionType) ? String(hero.base.actionType).toLowerCase() : null;
   if(!actionType){
     if(/heal|cure|restore|regen|heals?/i.test(ability)) actionType = 'healer';
     else actionType = 'dps';
+  }
+  // If this is a legendary placed card without `base`, some supports rely on card id.
+  // Force support action for known support legendaries (e.g., bjurganmyr).
+  const supportLegendaries = ['bjurganmyr','miley','kiefer'];
+  if(hid && supportLegendaries.indexOf(hid) !== -1){
+    actionType = 'support';
   }
   // DPS: delegate to the existing attack function which handles AP and multiplier
   if(actionType === 'dps' || actionType === 'attack'){
@@ -181,30 +220,110 @@ export function playHeroAction(state, slotIndex, targetIndex=null){
   }
   // Support: explicit id-based handling for support heroes (add more branches as needed)
   if(actionType === 'support'){
+    // Normalize id and name for cases where the hero is a legendary (may lack `base`)
+    const hid = (hero.base && hero.base.id) ? hero.base.id : hero.cardId;
+    const hname = (hero.base && hero.base.name) ? hero.base.name : hid;
+    // enforce once-per-round per support-id
+    const sid = hid ? String(hid) : null;
+    state.supportUsed = state.supportUsed || {};
+    if(sid && state.supportUsed[sid]){
+      return { success:false, reason:'used_this_round' };
+    }
+
     // Shalendra: refresh Volo's summon availability for this encounter
-    if (hero.base && hero.base.id === 'shalendra') {
+    if (hid === 'shalendra') {
       if (!state.summonUsed) state.summonUsed = {};
       state.summonUsed['volo'] = false;
       if (!state.summonCooldowns) state.summonCooldowns = {};
       state.summonCooldowns['volo'] = 0;
       state.ap -= 1;
+      state.supportUsed['shalendra'] = true;
       return { success:true, type:'support', slot: slotIndex, id:'shalendra', refreshed: 'volo' };
     }
 
     // Piter: special help action (marks this hero as helped for enemy single-target selection)
-    if (hero.base && hero.base.id === 'piter'){
+    if (hid === 'piter'){
       hero.helped = true;
       hero.helpSource = 'piter';
       state.ap -= 1;
+      state.supportUsed['piter'] = true;
       return { success:true, type:'support', slot: slotIndex, id:'piter' };
     }
 
     // Lumalia: schedule a delayed damage effect that triggers after the enemy turn
-    if (hero.base && hero.base.id === 'lumalia'){
+    if (hid === 'lumalia'){
       state.pendingEffects = state.pendingEffects || [];
-      state.pendingEffects.push({ type: 'delayedDamage', id: 'lumalia', slot: slotIndex, dmg: 6, trigger: 'afterEnemy', sourceName: (hero.base && hero.base.name) ? hero.base.name : 'Lumalia' });
+      state.pendingEffects.push({ type: 'delayedDamage', id: 'lumalia', slot: slotIndex, dmg: 6, trigger: 'afterEnemy', sourceName: hname });
       state.ap -= 1;
+      state.supportUsed['lumalia'] = true;
       return { success:true, type:'support', slot: slotIndex, id:'lumalia', scheduled: true };
+    }
+
+    // Scout: immediately grant the player +1 AP (free), once per round
+    if (hid === 'scout'){
+      state.supportUsed = state.supportUsed || {};
+      state.ap = (state.ap || 0) + 1;
+      state.supportUsed['scout'] = true;
+      return { success:true, type:'support', slot: slotIndex, id:'scout', apGranted: 1 };
+    }
+
+    // Willis: protect a target from all damage for 1 turn
+    if (hid === 'willis'){
+      if(typeof targetIndex !== 'number' || !state.playfield[targetIndex]){
+        return { success:false, reason:'target_required' };
+      }
+      const tgt = state.playfield[targetIndex];
+      tgt.protected = { turns: 1, source: 'willis' };
+      state.ap -= 1;
+      state.supportUsed['willis'] = true;
+      return { success:true, type:'support', slot: slotIndex, id:'willis', target: targetIndex };
+    }
+
+    // Brer: deal 5 damage to the enemy now, and cause the enemy's next attack to deal half damage
+    if (hid === 'brer'){
+      const dmg = 5;
+      state.enemy.hp = Math.max(0, (state.enemy.hp || 0) - dmg);
+      // mark enemy so its next attack damage is halved
+      state.enemy.nextAttackHalved = true;
+      state.ap -= 1;
+      state.supportUsed['brer'] = true;
+      return { success:true, type:'support', slot: slotIndex, id:'brer', dmg, enemyHp: state.enemy.hp, nextEnemyAttackHalved: true };
+    }
+
+    // Bjurganmyr: immediate 8 damage, then 8 damage after the enemy act for the next 2 turns (stackable)
+    if (hid === 'bjurganmyr'){
+      const dmg = 8;
+      state.enemy.hp = Math.max(0, (state.enemy.hp || 0) - dmg);
+      state.pendingEffects = state.pendingEffects || [];
+      // schedule two future triggers (afterEnemy). times=2 means it will trigger after the next 2 enemy turns
+      state.pendingEffects.push({ type: 'delayedDamage', id: 'bjurganmyr', slot: slotIndex, dmg: dmg, trigger: 'afterEnemy', times: 2, sourceName: hname });
+      state.ap -= 1;
+      state.supportUsed['bjurganmyr'] = true;
+      return { success:true, type:'support', slot: slotIndex, id:'bjurganmyr', dmg, enemyHp: state.enemy.hp, scheduled: true };
+    }
+
+    // Miley: immediate 8 damage, then 8 damage after the enemy act for the next 2 turns (stackable)
+    if (hid === 'miley'){
+      const dmg = 8;
+      state.enemy.hp = Math.max(0, (state.enemy.hp || 0) - dmg);
+      state.pendingEffects = state.pendingEffects || [];
+      state.pendingEffects.push({ type: 'delayedDamage', id: 'miley', slot: slotIndex, dmg: dmg, trigger: 'afterEnemy', times: 2, sourceName: hname });
+      state.ap -= 1;
+      state.supportUsed['miley'] = true;
+      return { success:true, type:'support', slot: slotIndex, id:'miley', dmg, enemyHp: state.enemy.hp, scheduled: true };
+    }
+
+    // Kiefer: 1 in 6 chance to stun the enemy for the rest of the encounter
+    if (hid === 'kiefer'){
+      state.ap -= 1;
+      state.supportUsed['kiefer'] = true;
+      // Use deterministic RNG if available on state, else fallback to Math.random
+      let roll = (state.rng && typeof state.rng.int === 'function') ? (state.rng.int(6) + 1) : (Math.floor(Math.random()*6) + 1);
+      if(roll === 1){
+        state.enemy.stunnedTurns = Infinity;
+        return { success:true, type:'support', slot: slotIndex, id:'kiefer', stunned: true, roll };
+      }
+      return { success:true, type:'support', slot: slotIndex, id:'kiefer', stunned: false, roll };
     }
 
     // Default support: no implicit behavior. Unknown support actions do nothing.
@@ -279,7 +398,13 @@ export function enemyAct(state){
     const atk = picks[atkIndex] || {};
     const attackName = atk.name || ('Attack '+(atkIndex+1));
     const type = (atk.type || 'single').toLowerCase();
-    const baseDmg = (typeof atk.dmg === 'number') ? atk.dmg : (state.enemy.attack || 1);
+    let baseDmg = (typeof atk.dmg === 'number') ? atk.dmg : (state.enemy.attack || 1);
+    // if a support (e.g., Brer) caused the enemy's next attack to be halved,
+    // apply that here and consume the flag so it only affects one attack.
+    if(state.enemy && state.enemy.nextAttackHalved){
+      baseDmg = Math.ceil(baseDmg/2);
+      try{ delete state.enemy.nextAttackHalved; }catch(e){}
+    }
     // Use centralized handlers for both AOE and single-target attacks
     if(type === 'aoe'){
       events.push(...resolveAoEAttack(state, baseDmg, atkIndex, attackName));
@@ -304,14 +429,28 @@ export function enemyAct(state){
           const dmg = Number(eff.dmg) || 0;
           state.enemy.hp = Math.max(0, state.enemy.hp - dmg);
           events.push({ type: 'enemyDamage', id: eff.id, slot: eff.slot, dmg: dmg, enemyHp: state.enemy.hp, sourceName: eff.sourceName });
+          // If this effect should repeat for additional enemy turns, decrement its counter and keep it
+          if(typeof eff.times === 'number' && eff.times > 1){
+            const copy = Object.assign({}, eff, { times: eff.times - 1 });
+            remaining.push(copy);
+          }
         }
-        // do not keep after triggered
+        // single-use or exhausted repeating effects are not kept
       } else {
         remaining.push(eff);
       }
     });
     state.pendingEffects = remaining;
   }
+  // Decrement protection durations (e.g., Willis shield) so they last one enemy turn
+  state.playfield.forEach(h=>{
+    if(h && h.protected){
+      try{ h.protected.turns = (Number(h.protected.turns) || 0) - 1; }catch(e){}
+      if(!h.protected || h.protected.turns <= 0){ try{ delete h.protected; }catch(e){} }
+    }
+  });
+  // Reset per-round support usage so supports (like Scout) are usable next round
+  try{ state.supportUsed = {}; }catch(e){}
   // drawing removed — cards remain static in `deck.hand` for duration of encounter
   return {did:'enemyAct', events};
 }
@@ -345,10 +484,12 @@ export function useSummon(state, summonDef, targetIndex=null){
     else target = heroes.filter(h=>h).reduce((a,b)=> (a.hp < b.hp ? a : b));
     if(!target) return { success:false, reason:'no_target' };
     target.tempHp = (target.tempHp||0) + 30;
+      try{ AudioManager.playSfx(['./assets/sfx/blackrazor.mp3'], { volume: 0.6 }); }catch(e){}
   } 
   else if(id === 'whelm'){
     // stun enemy for 2 turns (ensure at least 2)
     state.enemy.stunnedTurns = Math.max(2, state.enemy.stunnedTurns||0);
+    try{ AudioManager.playSfx(['./assets/sfx/whelm.mp3'], { volume: 0.3 }); }catch(e){}
   } 
   else if(id === 'wave'){
     // reduce enemy HP by 50% of max

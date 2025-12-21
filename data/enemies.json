@@ -2,7 +2,7 @@
   {
     "name": "Twig Blight",
     "ip_reward": 1,
-    "hp": 18,
+    "hp": 20,
     "id": "twig_blight",
     "attacks": [
       { "name": "Claws", "type": "single", "dmg": 1 },
@@ -13,47 +13,89 @@
   {
     "name": "Wiltherp",
     "ip_reward": 3,
-    "hp": 30,
+    "hp": 35,
     "id": "wiltherp",
     "attacks": [
       { "name": "Poison Spray", "type": "single", "dmg": 2 },
       { "name": "Shillelagh", "type": "single", "dmg": 2 },
-      { "name": "Thunderwave", "type": "aoe", "dmg": 1 }
+      { "name": "Thunderwave", "type": "aoe", "dmg": 2 }
     ]
   },
   {
     "name": "Red Wizard",
     "ip_reward": 5,
-    "hp": 42,
+    "hp": 50,
     "id": "red_wizard",
     "attacks": [
       { "name": "Firebolt", "type": "single", "dmg": 3 },
       { "name": "Fireball", "type": "aoe", "dmg": 2 },
-      { "name": "Magic Missile", "type": "single", "dmg": 4 }
+      { "name": "Magic Missile", "type": "single", "dmg": 5 }
     ]
-  }
-  ,
+  },
   {
     "name": "Szass Tam",
     "ip_reward": 7,
-    "hp": 62,
+    "hp": 70,
     "id": "szass_tam",
     "attacks": [
       { "name": "Paralyzing Touch", "type": "single", "dmg": 4 },
       { "name": "Cone of Cold", "type": "aoe", "dmg": 3 },
-      { "name": "Disintegrate", "type": "single", "dmg": 5 }
+      { "name": "Disintegrate", "type": "single", "dmg": 6 }
     ]
-  }
-,
+  },
   {
     "name": "King Snurre",
     "ip_reward": 9,
-    "hp": 88,
+    "hp": 100,
     "id": "snurre",
     "attacks": [
       { "name": "Rock Throw", "type": "single", "dmg": 5 },
       { "name": "Greatsword", "type": "single", "dmg": 6 },
-      { "name": "Legendary Attack", "type": "single", "dmg": 7 }
+      { "name": "Legendary Attack", "type": "single", "dmg": 8 }
+    ]
+  },
+  {
+    "name": "Keraptis",
+    "ip_reward": 11,
+    "hp": 130,
+    "id": "keraptis",
+    "attacks": [
+      { "name": "Blight", "type": "single", "dmg": 6 },
+      { "name": "Cloudkill", "type": "aoe", "dmg": 4 },
+      { "name": "Chain Lightning", "type": "aoe", "dmg": 6 }
+    ]
+  },
+  {
+    "name": "Acererak",
+    "ip_reward": 13,
+    "hp": 165,
+    "id": "acererak",
+    "attacks": [
+      { "name": "Finger of Death", "type": "single", "dmg": 8 },
+      { "name": "Circle of Death", "type": "aoe", "dmg": 5 },
+      { "name": "Power Word Kill", "type": "single", "dmg": 15 }
+    ]
+  },
+  {
+    "name": "Strahd",
+    "ip_reward": 15,
+    "hp": 220,
+    "id": "strahd",
+    "attacks": [
+      { "name": "Bite", "type": "single", "dmg": 12 },
+      { "name": "Steel Wind Strike", "type": "aoe", "dmg": 8 },
+      { "name": "Meteor Swarm", "type": "aoe", "dmg": 10 }
+    ]
+  },
+  {
+    "name": "Vecna",
+    "ip_reward": 1000,
+    "hp": 99999,
+    "id": "vecna",
+    "attacks": [
+      { "name": "Rewrite History", "type": "aoe", "dmg": 10 },
+      { "name": "Rewrite History", "type": "aoe", "dmg": 10 },
+      { "name": "Metagame", "type": "single", "dmg": 200 }
     ]
   }
 ]
