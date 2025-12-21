@@ -1000,6 +1000,21 @@ body{
 .card.selected{outline:3px solid rgba(134,239,172,0.95);box-shadow:0 18px 36px rgba(34,197,94,0.12);transform:translateY(-6px)}
 .card.selected img{filter:brightness(1.02) contrast(1.02)}
 
+/* Disable the hover "lift" effect for buttons site-wide while preserving necessary transforms
+  (e.g., the start-run button uses translateX(-50%) for centering). */
+.btn:hover{ transform: none !important }
+.btn:active{ transform: none !important }
+/* Restore the horizontal centering transform for the start button on hover/active */
+.start-run-btn:hover{ transform: translateX(-50%) !important }
+.start-run-btn:active{ transform: translateX(-50%) !important }
+
+/* Ensure the Inspiration Points counter does not 'lift' on hover */
+.ip-display, .ip-display *{
+  transform: none !important;
+  transition: none !important;
+}
+.ip-display:hover{ transform: none !important }
+
 /* improve the clickable feel on start screen grid */
 .card-grid .card{transition:transform 160ms ease,box-shadow 160ms ease,outline 160ms ease}
 
