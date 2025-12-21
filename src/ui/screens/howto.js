@@ -28,7 +28,14 @@ export function renderHowTo(root, ctx){
   leftSections.forEach(s => {
     const sec = el('div',{class:'howto-section'},[]);
     sec.appendChild(el('div',{class:'howto-legend'},[s.title]));
-    s.body.forEach(p => sec.appendChild(el('p',{},[p])));
+    // If multiple lines, render as list
+    if(s.body.length > 1){
+      const ul = el('ul',{class:'howto-list'},[]);
+      s.body.forEach(line => ul.appendChild(el('li',{},[line])));
+      sec.appendChild(ul);
+    } else {
+      s.body.forEach(p => sec.appendChild(el('p',{},[p])));
+    }
     leftCol.appendChild(sec);
   });
 
